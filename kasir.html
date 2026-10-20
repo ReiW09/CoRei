@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Kasir & Dapur — CoRei</title>
+  <meta name="theme-color" content="#1B5E52">
+  <link rel="icon" href="icon-192.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#F8FAF9;--surface:#FFF;--surface-subtle:#F1F5F3;--ink:#14211D;--muted:#5C6E67;--line:#E2E8E5;--accent:#1B5E52;--accent-subtle:#E8F3F0;--accent-ink:#FFF;--promo:#E18700;--promo-bg:#FEF3E2;--promo-ink:#7A4400;--success:#16A34A;--success-bg:#DCFCE7;--danger:#D9383A;--danger-bg:#FDE8E8;color-scheme:light}
+    @media(prefers-color-scheme:dark){:root{--bg:#0D1614;--surface:#15221F;--surface-subtle:#1C2D29;--ink:#EEF4F1;--muted:#8FA49C;--line:#263832;--accent:#5CC8AF;--accent-subtle:#132D26;--accent-ink:#0A1412;--promo:#FBBF24;--promo-bg:#352605;--promo-ink:#FDE68A;--success:#34D399;--success-bg:#0E3426;--danger:#F87171;--danger-bg:#391515;color-scheme:dark}}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "Plus Jakarta Sans",system-ui,sans-serif;padding:env(safe-area-inset-top) 16px calc(24px + env(safe-area-inset-bottom))}button,input{font:inherit}button,a,input{touch-action:manipulation}button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}main{max-width:1080px;margin:auto}.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:22px 0;border-bottom:1px solid var(--line)}h1,h2,h3{font-family:"Bricolage Grotesque",system-ui,sans-serif;line-height:1.2}.brand h1{font-size:25px;margin:0}.brand p{margin:4px 0 0;color:var(--muted);font-size:13px}.topbar a{color:var(--accent);font-weight:700;text-decoration:none}.panel{max-width:420px;margin:50px auto;padding:24px;background:var(--surface);border:1px solid var(--line);border-radius:20px;box-shadow:0 8px 24px #10201812}.panel h2{margin:0 0 6px}.muted{color:var(--muted)}label{display:block;margin:16px 0 5px;font-weight:600;font-size:13px}input{width:100%;min-height:46px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink)}button{cursor:pointer}.primary,.action{border:0;border-radius:10px;background:var(--accent);color:var(--accent-ink);font-weight:700;min-height:44px;padding:10px 16px}.primary{width:100%;margin-top:20px}.primary:disabled,.action:disabled{opacity:.55;cursor:wait}.error{margin-top:12px;padding:11px;border-radius:10px;background:var(--danger-bg);color:var(--danger);font-size:13px}.hidden{display:none!important}.orders-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:22px 0}.orders-heading h2{margin:0}.orders-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,320px),1fr));gap:14px}.order-card{background:var(--surface);border:1px solid var(--line);border-top:4px solid var(--promo);border-radius:16px;padding:16px;box-shadow:0 3px 12px #1020180a}.order-card[data-status="diproses"]{border-top-color:var(--accent)}.order-card[data-status="siap"]{border-top-color:var(--success)}.order-meta,.order-name,.order-total,.card-actions{display:flex;align-items:center;justify-content:space-between;gap:10px}.queue{font:800 22px "Bricolage Grotesque",system-ui,sans-serif;color:var(--accent)}.time,.small{font-size:12px;color:var(--muted)}.order-name{margin-top:6px;font-weight:700}.order-items{padding:10px 0;margin:8px 0;border-top:1px dashed var(--line);border-bottom:1px dashed var(--line)}.order-item{padding:4px 0}.note{color:var(--promo-ink);font-size:12px}.pill{border-radius:999px;padding:3px 9px;background:var(--promo-bg);color:var(--promo-ink);font-size:11px;font-weight:700}.pill.paid{background:var(--success-bg);color:var(--success)}.order-total{font-weight:700}.card-actions{justify-content:flex-start;flex-wrap:wrap;margin-top:12px}.action{flex:1 1 130px;min-height:42px}.action.secondary{background:var(--surface-subtle);color:var(--ink)}.empty{grid-column:1/-1;text-align:center;padding:34px 18px;background:var(--surface);border:1px solid var(--line);border-radius:16px;color:var(--muted)}.connection{font-size:12px;color:var(--muted);margin:10px 0}.notice{margin:15px 0;padding:12px;border-radius:10px;background:var(--promo-bg);color:var(--promo-ink);font-size:13px}
+  </style>
+</head>
+<body>
+  <main>
+    <header class="topbar">
+      <div class="brand"><h1>Kasir & Dapur</h1><p>CoRei · Pesanan dari pelanggan</p></div>
+      <a href="./">← Menu pelanggan</a>
+    </header>
+    <section id="login-panel" class="panel">
+      <h2>Masuk staf</h2>
+      <p class="muted">Gunakan akun staf CoRei yang dibuat di Supabase.</p>
+      <form id="login-form">
+        <label for="email">Email</label>
+        <input id="email" type="email" autocomplete="username" required>
+        <label for="password">Password</label>
+        <input id="password" type="password" autocomplete="current-password" required>
+        <button id="login-button" class="primary" type="submit">Masuk</button>
+      </form>
+      <div id="login-error" class="error hidden" role="alert"></div>
+    </section>
+    <section id="orders-panel" class="hidden" aria-live="polite">
+      <div class="orders-heading">
+        <div><h2>Pesanan masuk</h2><div id="connection-state" class="connection">Menghubungkan...</div></div>
+        <button id="logout-button" class="action secondary">Keluar</button>
+      </div>
+      <div id="kitchen-notice" class="notice hidden" role="status"></div>
+      <div id="orders-grid" class="orders-grid"></div>
+    </section>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script>
+    const client = window.supabase && window.COREI_SUPABASE_URL && window.COREI_SUPABASE_ANON_KEY
+      ? window.supabase.createClient(window.COREI_SUPABASE_URL, window.COREI_SUPABASE_ANON_KEY)
+      : null;
+    const loginPanel = document.getElementById("login-panel");
+    const ordersPanel = document.getElementById("orders-panel");
+    const loginError = document.getElementById("login-error");
+    const loginButton = document.getElementById("login-button");
+    const ordersGrid = document.getElementById("orders-grid");
+    const connectionState = document.getElementById("connection-state");
+    let kitchenChannel = null;
+    let currentCafeId = null;
+
+    function showError(message) {
+      loginError.textContent = message;
+      loginError.classList.remove("hidden");
+    }
+
+    function formatRupiah(amount) {
+      return "Rp" + Number(amount).toLocaleString("id-ID");
+    }
+
+    function renderOrders(orders) {
+      ordersGrid.replaceChildren();
+      if (!orders.length) {
+        const empty = document.createElement("div");
+        empty.className = "empty";
+        empty.textContent = "Belum ada pesanan masuk.";
+        ordersGrid.append(empty);
+        return;
+      }
+
+      orders.forEach(order => {
+        const card = document.createElement("article");
+        card.className = "order-card";
+        card.dataset.status = order.status;
+
+        const meta = document.createElement("div");
+        meta.className = "order-meta";
+        const queue = document.createElement("span");
+        queue.className = "queue";
+        queue.textContent = "#" + String(order.queue_number).padStart(3, "0");
+        const time = document.createElement("span");
+        time.className = "time";
+        time.textContent = new Date(order.created_at).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
+        meta.append(queue, time);
+
+        const name = document.createElement("div");
+        name.className = "order-name";
+        const customerName = document.createElement("span");
+        customerName.textContent = order.customer_name;
+        const payment = document.createElement("span");
+        payment.className = "pill" + (order.payment_status === "lunas" ? " paid" : "");
+        payment.textContent = (order.payment_status === "lunas" ? "Lunas" : "Belum lunas") + " · " + order.payment_method;
+        name.append(customerName, payment);
+
+        const table = document.createElement("div");
+        table.className = "small";
+        table.textContent = order.table_label ? "Meja: " + order.table_label : "";
+
+        const items = document.createElement("div");
+        items.className = "order-items";
+        (order.items || []).forEach(item => {
+          const row = document.createElement("div");
+          row.className = "order-item";
+          const options = [item.temp, item.ice && item.temp !== "Hot" ? item.ice : "", item.sweet].filter(Boolean).join(", ");
+          const summary = document.createElement("strong");
+          summary.textContent = item.qty + "× " + item.productName + " (" + item.variantLabel + ")" + (options ? " · " + options : "");
+          row.append(summary);
+          if (item.note) {
+            const note = document.createElement("div");
+            note.className = "note";
+            note.textContent = "Catatan: " + item.note;
+            row.append(note);
+          }
+          items.append(row);
+        });
+
+        const total = document.createElement("div");
+        total.className = "order-total";
+        const totalLabel = document.createElement("span");
+        totalLabel.textContent = "Total";
+        const totalValue = document.createElement("span");
+        totalValue.textContent = formatRupiah(order.total);
+        total.append(totalLabel, totalValue);
+
+        const actions = document.createElement("div");
+        actions.className = "card-actions";
+        if (order.payment_status !== "lunas") {
+          actions.append(makeAction("✓ Tandai lunas", "secondary", () => updatePayment(order.public_id)));
+        }
+        const nextStatus = { baru: ["diproses", "Mulai proses"], diproses: ["siap", "Siap diambil"], siap: ["selesai", "Selesai"] }[order.status];
+        if (nextStatus) actions.append(makeAction(nextStatus[1], "", () => updateStatus(order.public_id, nextStatus[0])));
+        card.append(meta, name, table, items, total, actions);
+        ordersGrid.append(card);
+      });
+    }
+
+    function makeAction(label, extraClass, callback) {
+      const button = document.createElement("button");
+      button.className = "action" + (extraClass ? " " + extraClass : "");
+      button.textContent = label;
+      button.addEventListener("click", callback);
+      return button;
+    }
+
+    async function loadOrders() {
+      const { data, error } = await client.from("orders")
+        .select("public_id, queue_number, customer_name, table_label, payment_method, payment_status, status, items, total, created_at")
+        .eq("cafe_id", currentCafeId)
+        .order("created_at", { ascending: false })
+        .limit(100);
+      if (error) {
+        connectionState.textContent = "Gagal memuat pesanan.";
+        console.error("Unable to load kitchen orders:", error);
+        return;
+      }
+      renderOrders(data || []);
+    }
+
+    async function updateStatus(publicId, status) {
+      const { error } = await client.rpc("update_customer_order_status", {
+        p_public_id: publicId,
+        p_status: status
+      });
+      if (error) {
+        alert("Status pesanan gagal diperbarui: " + error.message);
+        return;
+      }
+      await loadOrders();
+    }
+
+    async function updatePayment(publicId) {
+      const { error } = await client.rpc("update_customer_order_payment", {
+        p_public_id: publicId
+      });
+      if (error) {
+        alert("Status pembayaran gagal diperbarui: " + error.message);
+        return;
+      }
+      await loadOrders();
+    }
+
+    async function openKitchen(userId) {
+      const { data: cafe, error: cafeError } = await client.from("cafes")
+        .select("id")
+        .eq("slug", "corei")
+        .single();
+      if (cafeError || !cafe) {
+        showError("Kafe CoRei belum ditemukan. Pastikan migrasi Supabase sudah dijalankan.");
+        return;
+      }
+      const { data: membership, error: membershipError } = await client.from("cafe_memberships")
+        .select("user_id")
+        .eq("cafe_id", cafe.id)
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (membershipError || !membership) {
+        showError("Akun ini belum diberi akses staf CoRei.");
+        await client.auth.signOut();
+        return;
+      }
+
+      currentCafeId = cafe.id;
+      loginPanel.classList.add("hidden");
+      ordersPanel.classList.remove("hidden");
+      await loadOrders();
+      kitchenChannel = client.channel("kitchen-orders-" + cafe.id)
+        .on("postgres_changes", {
+          event: "*",
+          schema: "public",
+          table: "orders",
+          filter: "cafe_id=eq." + cafe.id
+        }, loadOrders)
+        .subscribe(status => {
+          connectionState.textContent = status === "SUBSCRIBED" ? "Tersambung · pembaruan langsung aktif" : "Menghubungkan ulang...";
+        });
+    }
+
+    document.getElementById("login-form").addEventListener("submit", async event => {
+      event.preventDefault();
+      loginError.classList.add("hidden");
+      if (!client) {
+        showError("Supabase belum dikonfigurasi. Isi supabase-config.js lalu muat ulang.");
+        return;
+      }
+      loginButton.disabled = true;
+      loginButton.textContent = "Memeriksa akun...";
+      const { data, error } = await client.auth.signInWithPassword({
+        email: document.getElementById("email").value.trim(),
+        password: document.getElementById("password").value
+      });
+      loginButton.disabled = false;
+      loginButton.textContent = "Masuk";
+      if (error) {
+        showError("Gagal masuk. Periksa email dan password akun staf.");
+        console.error("Kitchen sign-in failed:", error);
+        return;
+      }
+      await openKitchen(data.user.id);
+    });
+
+    document.getElementById("logout-button").addEventListener("click", async () => {
+      if (kitchenChannel) await client.removeChannel(kitchenChannel);
+      kitchenChannel = null;
+      currentCafeId = null;
+      await client.auth.signOut();
+      ordersPanel.classList.add("hidden");
+      loginPanel.classList.remove("hidden");
+      ordersGrid.replaceChildren();
+    });
+
+    if (!client) showError("Supabase belum dikonfigurasi. Isi supabase-config.js lalu muat ulang.");
+  </script>
+</body>
+</html>

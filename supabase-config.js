@@ -1,0 +1,2 @@
+window.COREI_SUPABASE_URL = "";
+window.COREI_SUPABASE_ANON_KEY = "";

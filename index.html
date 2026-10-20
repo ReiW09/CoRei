@@ -124,59 +124,6 @@
       padding: 0 16px;
     }
 
-    /* Top Demo Switcher Pill */
-    .demo-bar {
-      position: sticky;
-      top: 0;
-      z-index: 50;
-      background: rgba(20, 33, 29, 0.88);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      color: #fff;
-      padding: 6px 12px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      font-size: 12px;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
-    }
-    .demo-tabs {
-      display: flex;
-      gap: 4px;
-      background: rgba(255,255,255,0.12);
-      padding: 3px;
-      border-radius: var(--radius-full);
-    }
-    .demo-tabs button {
-      border: 0;
-      background: transparent;
-      color: rgba(255,255,255,0.75);
-      padding: 4px 10px;
-      border-radius: var(--radius-full);
-      font-size: 11px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .demo-tabs button.active {
-      background: #FFFFFF;
-      color: #14211D;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    }
-    .theme-toggle-btn {
-      background: transparent;
-      border: 1px solid rgba(255,255,255,0.2);
-      color: #fff;
-      border-radius: var(--radius-full);
-      width: 28px;
-      height: 28px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      font-size: 14px;
-    }
-
     /* Hero / Header */
     .cafe-header {
       padding: 24px 0 16px;
@@ -896,6 +843,16 @@
       margin: 0 0 20px;
       line-height: 1.5;
     }
+    .customer-status-notice {
+      width: 100%;
+      margin: 0 0 18px;
+      padding: 14px;
+      border: 1px solid var(--accent);
+      border-radius: var(--radius-md);
+      background: var(--accent-subtle);
+      color: var(--ink);
+      font-weight: 700;
+    }
 
     /* Live Order Status Stepper */
     .status-tracker {
@@ -1006,108 +963,6 @@
       font-weight: 600;
     }
 
-    /* Kasir View (Mode Kasir & Dapur) */
-    .kasir-container {
-      display: none;
-      padding: 16px;
-      max-width: 900px;
-      margin: 0 auto;
-    }
-    .kasir-container.active {
-      display: block;
-    }
-    .kasir-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-bottom: 20px;
-      padding-bottom: 14px;
-      border-bottom: 1px solid var(--line);
-    }
-    .order-cards-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 16px;
-    }
-    .cashier-card {
-      background: var(--surface);
-      border: 1.5px solid var(--line);
-      border-radius: var(--radius-lg);
-      padding: 16px;
-      box-shadow: var(--shadow-sm);
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-    }
-    .cashier-card.status-baru {
-      border-top: 4px solid var(--promo);
-    }
-    .cashier-card.status-diproses {
-      border-top: 4px solid var(--accent);
-    }
-    .cashier-card.status-siap {
-      border-top: 4px solid var(--success);
-    }
-    .cashier-card.status-selesai {
-      opacity: 0.7;
-    }
-    .card-meta-line {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      margin-bottom: 8px;
-    }
-    .card-q-num {
-      font-family: 'Bricolage Grotesque', sans-serif;
-      font-size: 20px;
-      font-weight: 800;
-      color: var(--accent);
-    }
-    .card-cust-name {
-      font-size: 16px;
-      font-weight: 700;
-    }
-    .card-items-list {
-      margin: 12px 0;
-      padding-top: 8px;
-      border-top: 1px dashed var(--line);
-      border-bottom: 1px dashed var(--line);
-      font-size: 13px;
-    }
-    .card-action-bar {
-      display: flex;
-      gap: 6px;
-      margin-top: 12px;
-    }
-    .btn-cashier-action {
-      flex: 1;
-      padding: 8px;
-      border-radius: var(--radius-sm);
-      border: 0;
-      font-size: 12px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-    .btn-act-process {
-      background: var(--accent);
-      color: #fff;
-    }
-    .btn-act-ready {
-      background: var(--success);
-      color: #fff;
-    }
-    .btn-act-done {
-      background: var(--surface-subtle);
-      color: var(--ink);
-    }
-    .btn-act-pay {
-      background: var(--promo-bg);
-      color: var(--promo-ink);
-      border: 1px solid var(--promo);
-    }
-
     /* QR Meja Modal */
     .qr-modal {
       text-align: center;
@@ -1138,18 +993,6 @@
   </style>
 </head>
 <body>
-
-  <!-- Top Demo Switcher Pill -->
-  <aside class="demo-bar" aria-label="Demo Navigation">
-    <div style="display:flex; align-items:center; gap:8px;">
-      <span style="font-weight:700; letter-spacing:0.04em;">CoRei v2.0</span>
-    </div>
-    <div class="demo-tabs">
-      <button type="button" class="active" id="tab-cust" onclick="switchView('cust')">Pelanggan</button>
-      <button type="button" id="tab-kasir" onclick="switchView('kasir')">Kasir / Dapur (<span id="kasir-count">0</span>)</button>
-    </div>
-    <button type="button" class="theme-toggle-btn" onclick="toggleTheme()" title="Ganti Tema Terang/Gelap" aria-label="Ganti tema">🌓</button>
-  </aside>
 
   <!-- ==================== VIEW 1: CUSTOMER VIEW ==================== -->
   <main class="app-container" id="view-customer">
@@ -1192,6 +1035,7 @@
           📱 Buka QR Code Meja
         </button>
       </div>
+      <p style="margin-top:14px;"><a href="kasir.html">Masuk kasir / dapur</a></p>
     </footer>
   </main>
 
@@ -1272,7 +1116,8 @@
           <span>Total Pembayaran</span>
           <span class="order-total-price" id="drawer-total-price">Rp0</span>
         </div>
-        <button type="button" class="btn-submit-order" onclick="submitOrder()">
+        <div id="order-submit-error" class="error-msg-text" role="alert"></div>
+        <button type="button" class="btn-submit-order" id="submit-order-button" onclick="submitOrder()">
           <span>Kirim Pesanan Sekarang</span>
           <span>→</span>
         </button>
@@ -1288,6 +1133,7 @@
       <p class="thanks-desc" id="thanks-instruction-text">
         Pesananmu sudah kami terima dan segera disiapkan.
       </p>
+      <div id="customer-status-notice" class="customer-status-notice" role="status" aria-live="polite" hidden></div>
 
       <!-- Live Order Status Tracker -->
       <div class="status-tracker">
@@ -1295,7 +1141,7 @@
           <div class="step-circle">1</div>
           <span class="step-label">Baru</span>
         </div>
-        <div class="status-step" id="step-proses">
+        <div class="status-step" id="step-diproses">
           <div class="step-circle">2</div>
           <span class="step-label">Diproses</span>
         </div>
@@ -1335,25 +1181,6 @@
     </div>
   </section>
 
-  <!-- ==================== VIEW 2: KASIR & DAPUR ==================== -->
-  <section class="kasir-container" id="view-kasir" aria-label="Layar Kasir">
-    <div class="kasir-header">
-      <div>
-        <h2 style="margin:0; font-size:24px;">Layar Kasir & Dapur</h2>
-        <p style="margin:2px 0 0; color:var(--ink-muted); font-size:13px;">Pesanan masuk secara realtime dari pelanggan.</p>
-      </div>
-      <div style="display:flex; gap:8px; align-items:center;">
-        <button type="button" class="btn-add" onclick="playNotificationSound()">🔔 Tes Suara</button>
-        <button type="button" class="btn-add" onclick="clearAllOrders()">🗑️ Bersihkan Data</button>
-      </div>
-    </div>
-
-    <!-- Orders Grid -->
-    <div class="order-cards-grid" id="kasir-orders-grid">
-      <!-- Dynamically filled with orders -->
-    </div>
-  </section>
-
   <!-- ==================== QR MODAL ==================== -->
   <div class="modal-overlay" id="qr-modal" onclick="closeQrModal(event)">
     <div class="qr-modal" onclick="event.stopPropagation()">
@@ -1381,6 +1208,9 @@
       <p>Terima kasih atas kunjunganmu!</p>
     </div>
   </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
 
   <!-- Application Logic -->
   <script>
@@ -1480,6 +1310,9 @@
 
     const WA_NUMBER = "6285283252381";
     const SHEET_URL = "https://script.google.com/macros/s/AKfycbws5ZZwgGpxe8BQkdHI7B7nR0zl5x81ELBGnJRSLZb0dxSrm_bf1Kom3qEteg47fb2r1Q/exec";
+    const supabaseClient = window.supabase && window.COREI_SUPABASE_URL && window.COREI_SUPABASE_ANON_KEY
+      ? window.supabase.createClient(window.COREI_SUPABASE_URL, window.COREI_SUPABASE_ANON_KEY)
+      : null;
 
     // ==========================================
     // STATE MANAGEMENT
@@ -1487,13 +1320,8 @@
     let cart = {}; // key: variantId -> { product, variant, qty, note, temp, ice, sweet }
     let selectedPaymentMethod = "";
     let lastCompletedOrder = null;
-    let ordersList = [];
-
-    // Load persisted orders from LocalStorage
-    try {
-      const saved = localStorage.getItem("corei_orders");
-      if (saved) ordersList = JSON.parse(saved);
-    } catch(e) {}
+    let customerStatusChannel = null;
+    let submittingOrder = false;
 
     // Currency Formatter
     function formatRupiah(amount) {
@@ -1813,7 +1641,13 @@
     }
 
     // Submit Order
-    function submitOrder() {
+    async function submitOrder() {
+      const submitButton = document.getElementById("submit-order-button");
+      const submitError = document.getElementById("order-submit-error");
+      if (submittingOrder) return;
+      submitError.textContent = "";
+      submitError.classList.remove("show");
+
       const nameInput = document.getElementById("customer-name");
       const name = nameInput.value.trim();
 
@@ -1831,54 +1665,69 @@
         return;
       }
 
-      const { items, total } = getCartSummary();
+      const { items } = getCartSummary();
       if (items.length === 0) return;
+
+      if (!supabaseClient) {
+        submitError.textContent = "Pemesanan online belum dikonfigurasi. Silakan hubungi kasir.";
+        submitError.classList.add("show");
+        return;
+      }
 
       const tableInput = document.getElementById("table-number");
       const tableVal = tableInput ? tableInput.value.trim() : "";
+      submittingOrder = true;
+      submitButton.disabled = true;
+      submitButton.querySelector("span").textContent = "Mengirim pesanan...";
 
-      // Generate Queue Number (1-999)
-      const queueNumber = String(ordersList.length + 1).padStart(3, "0");
-
-      const orderRecord = {
-        id: "ORD-" + Date.now(),
-        queueNumber: "#" + queueNumber,
-        customerName: name,
-        table: tableVal,
-        paymentMethod: selectedPaymentMethod,
-        paymentStatus: selectedPaymentMethod === "Cash" ? "belum_bayar" : "belum_bayar",
-        orderStatus: "baru", // baru -> diproses -> siap -> selesai
-        createdAt: new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }),
-        items: items.map(item => ({
-          productName: item.product.name,
-          variantLabel: item.variant.label,
-          qty: item.qty,
-          price: item.variant.price,
-          temp: item.temp,
-          ice: item.ice,
-          sweet: item.sweet,
-          note: item.note
-        })),
-        total: total
-      };
-
-      // Save to cashier state
-      ordersList.unshift(orderRecord);
       try {
-        localStorage.setItem("corei_orders", JSON.stringify(ordersList));
-      } catch(e) {}
+        const { data, error } = await supabaseClient.rpc("create_customer_order", {
+          p_customer_name: name,
+          p_table_label: tableVal,
+          p_payment_method: selectedPaymentMethod,
+          p_items: items.map(item => ({
+            variant_id: item.variant.id,
+            qty: item.qty,
+            temp: item.variant.hasTemp ? item.temp : null,
+            ice: item.variant.hasIce && (!item.variant.hasTemp || item.temp === "Ice") ? item.ice : null,
+            sweet: item.variant.hasSweet ? item.sweet : null,
+            note: item.note
+          }))
+        });
 
-      lastCompletedOrder = orderRecord;
+        if (error) throw error;
+        if (!data || !data.public_id || !Array.isArray(data.items)) {
+          throw new Error("Respons pesanan tidak lengkap. Silakan periksa status pesanan sebelum mencoba lagi.");
+        }
 
-      // Kirim pencatatan ke Google Sheets via Google Apps Script
-      logOrderToGoogleSheets(orderRecord);
+        const orderRecord = {
+          id: data.public_id,
+          publicId: data.public_id,
+          queueNumber: "#" + String(data.queue_number).padStart(3, "0"),
+          customerName: name,
+          table: tableVal,
+          paymentMethod: selectedPaymentMethod,
+          paymentStatus: data.payment_status,
+          orderStatus: data.status,
+          createdAt: new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }),
+          items: data.items,
+          total: data.total
+        };
 
-      // Play chime sound
-      playNotificationSound();
-
-      // Show Thank You Screen
-      showThankYouScreen(orderRecord);
-      updateKasirView();
+        lastCompletedOrder = orderRecord;
+        logOrderToGoogleSheets(orderRecord);
+        playNotificationSound();
+        showThankYouScreen(orderRecord);
+        subscribeToCustomerOrder(orderRecord.publicId);
+      } catch (error) {
+        console.error("Order submission failed:", error);
+        submitError.textContent = error.message || "Pesanan gagal dikirim. Silakan coba lagi.";
+        submitError.classList.add("show");
+      } finally {
+        submittingOrder = false;
+        submitButton.disabled = false;
+        submitButton.querySelector("span").textContent = "Kirim Pesanan Sekarang";
+      }
     }
 
     // ==========================================
@@ -1951,13 +1800,17 @@
       waBtn.href = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(waText)}`;
 
       // Update Stepper
-      updateStatusTracker("baru");
+      updateStatusTracker(order.orderStatus);
+      updateCustomerStatusNotice(order.orderStatus, false);
+      const url = new URL(window.location.href);
+      url.searchParams.set("pesanan", order.publicId);
+      window.history.replaceState({}, "", url);
 
       document.getElementById("thanks-screen").classList.add("open");
     }
 
     function updateStatusTracker(status) {
-      const steps = ["baru", "proses", "siap", "selesai"];
+      const steps = ["baru", "diproses", "siap", "selesai"];
       const currentIdx = steps.indexOf(status);
 
       steps.forEach((st, idx) => {
@@ -1972,6 +1825,91 @@
       });
     }
 
+    function updateCustomerStatusNotice(status, announce) {
+      const notice = document.getElementById("customer-status-notice");
+      const messages = {
+        baru: "Pesanan diterima. Kami akan segera menyiapkannya.",
+        diproses: "Pesananmu sedang dibuat oleh dapur.",
+        siap: "Pesananmu sudah siap diambil di kasir!",
+        selesai: "Pesanan sudah selesai. Terima kasih!",
+        batal: "Pesanan dibatalkan. Silakan hubungi kasir."
+      };
+      notice.textContent = messages[status] || "Status pesanan diperbarui.";
+      notice.hidden = false;
+
+      if (announce && status === "siap" && "Notification" in window && Notification.permission === "granted") {
+        new Notification("Pesanan CoRei siap diambil", {
+          body: `Nomor antrean ${lastCompletedOrder?.queueNumber || ""}`,
+          icon: "icon-192.png"
+        });
+      }
+    }
+
+    function applyCustomerOrderStatus(status) {
+      const previousStatus = lastCompletedOrder?.orderStatus;
+      if (!lastCompletedOrder) return;
+      lastCompletedOrder.orderStatus = status.status;
+      lastCompletedOrder.paymentStatus = status.payment_status;
+      updateStatusTracker(status.status);
+      updateCustomerStatusNotice(status.status, previousStatus !== status.status);
+    }
+
+    function subscribeToCustomerOrder(publicId) {
+      if (!supabaseClient || !publicId) return;
+      if (customerStatusChannel) supabaseClient.removeChannel(customerStatusChannel);
+
+      customerStatusChannel = supabaseClient
+        .channel("order:" + publicId, { config: { private: true } })
+        .on("broadcast", { event: "status_updated" }, ({ payload }) => applyCustomerOrderStatus(payload))
+        .subscribe(async status => {
+          if (status !== "SUBSCRIBED") {
+            if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
+              const notice = document.getElementById("customer-status-notice");
+              notice.textContent = "Koneksi pembaruan status terputus. Periksa internet atau muat ulang halaman ini.";
+              notice.hidden = false;
+            }
+            return;
+          }
+          const { data, error } = await supabaseClient.rpc("get_customer_order_status", {
+            p_public_id: publicId
+          });
+          if (error) {
+            console.error("Could not refresh customer order status:", error);
+            return;
+          }
+          if (data) applyCustomerOrderStatus(data);
+        });
+    }
+
+    async function restoreCustomerOrderFromUrl() {
+      const url = new URL(window.location.href);
+      const publicId = url.searchParams.get("pesanan");
+      if (!publicId || !supabaseClient) return;
+
+      const { data, error } = await supabaseClient.rpc("get_customer_order_status", {
+        p_public_id: publicId
+      });
+      if (error || !data) {
+        console.error("Could not restore customer order:", error);
+        return;
+      }
+
+      lastCompletedOrder = {
+        id: data.public_id,
+        publicId: data.public_id,
+        queueNumber: "#" + String(data.queue_number).padStart(3, "0"),
+        customerName: data.customer_name,
+        table: data.table_label || "",
+        paymentMethod: data.payment_method,
+        paymentStatus: data.payment_status,
+        orderStatus: data.status,
+        items: data.items || [],
+        total: data.total || 0
+      };
+      showThankYouScreen(lastCompletedOrder);
+      subscribeToCustomerOrder(publicId);
+    }
+
     function resetOrderAndBack() {
       cart = {};
       selectedPaymentMethod = "";
@@ -1982,133 +1920,18 @@
       document.getElementById("cash-preview-box").style.display = "none";
 
       document.getElementById("thanks-screen").classList.remove("open");
+      document.getElementById("customer-status-notice").hidden = true;
+      lastCompletedOrder = null;
+      if (customerStatusChannel && supabaseClient) {
+        supabaseClient.removeChannel(customerStatusChannel);
+        customerStatusChannel = null;
+      }
+      const url = new URL(window.location.href);
+      url.searchParams.delete("pesanan");
+      window.history.replaceState({}, "", url);
       updateCartUI();
       renderProducts(currentCategory);
       window.scrollTo(0, 0);
-    }
-
-    // ==========================================
-    // KASIR & DAPUR MANAGEMENT
-    // ==========================================
-    function switchView(viewName) {
-      const custView = document.getElementById("view-customer");
-      const kasirView = document.getElementById("view-kasir");
-      const btnCust = document.getElementById("tab-cust");
-      const btnKasir = document.getElementById("tab-kasir");
-
-      if (viewName === "cust") {
-        custView.style.display = "block";
-        kasirView.classList.remove("active");
-        btnCust.classList.add("active");
-        btnKasir.classList.remove("active");
-      } else {
-        custView.style.display = "none";
-        kasirView.classList.add("active");
-        btnCust.classList.remove("active");
-        btnKasir.classList.add("active");
-        updateKasirView();
-      }
-    }
-
-    function updateKasirView() {
-      const grid = document.getElementById("kasir-orders-grid");
-      const badge = document.getElementById("kasir-count");
-      grid.innerHTML = "";
-      badge.textContent = ordersList.filter(o => o.orderStatus !== "selesai").length;
-
-      if (ordersList.length === 0) {
-        grid.innerHTML = `
-          <div style="grid-column:1/-1; text-align:center; padding:40px 20px; background:var(--surface); border:1px solid var(--line); border-radius:16px;">
-            <p style="font-size:18px; font-weight:700; margin:0 0 6px;">Belum ada pesanan masuk</p>
-            <p style="color:var(--ink-muted); margin:0; font-size:13px;">Buka mode Pelanggan dan coba buat pesanan baru.</p>
-          </div>
-        `;
-        return;
-      }
-
-      ordersList.forEach(order => {
-        const card = document.createElement("div");
-        card.className = `cashier-card status-${order.orderStatus}`;
-
-        let itemsHtml = order.items.map(i => {
-          const opts = [];
-          if (i.temp) opts.push(i.temp);
-          if (i.ice && i.temp !== "Hot") opts.push(i.ice);
-          if (i.sweet) opts.push(i.sweet);
-          const optStr = opts.length ? `(${opts.join(", ")})` : "";
-          const noteStr = i.note ? `<div style="color:var(--promo); font-size:11px;">⚠️ Catatan: ${escapeHtml(i.note)}</div>` : "";
-          return `
-            <div style="padding:4px 0;">
-              <strong>${i.qty}× ${i.productName}</strong> ${optStr}
-              ${noteStr}
-            </div>
-          `;
-        }).join("");
-
-        const payBadge = order.paymentStatus === "lunas"
-          ? `<span style="background:var(--success-bg); color:var(--success); padding:2px 8px; border-radius:999px; font-weight:700; font-size:11px;">Lunas (${order.paymentMethod})</span>`
-          : `<span style="background:var(--promo-bg); color:var(--promo-ink); padding:2px 8px; border-radius:999px; font-weight:700; font-size:11px;">Belum Lunas (${order.paymentMethod})</span>`;
-
-        card.innerHTML = `
-          <div>
-            <div class="card-meta-line">
-              <span class="card-q-num">${order.queueNumber}</span>
-              <span style="font-size:12px; color:var(--ink-muted);">${order.createdAt}</span>
-            </div>
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-              <span class="card-cust-name">${escapeHtml(order.customerName)}</span>
-              ${payBadge}
-            </div>
-            ${order.table ? `<div style="font-size:12px; color:var(--accent); font-weight:600; margin-top:2px;">📍 ${escapeHtml(order.table)}</div>` : ""}
-
-            <div class="card-items-list">
-              ${itemsHtml}
-            </div>
-
-            <div style="display:flex; justify-content:space-between; font-weight:700; margin-top:6px;">
-              <span>Total</span>
-              <span style="font-family:'Bricolage Grotesque'">${formatRupiah(order.total)}</span>
-            </div>
-          </div>
-
-          <div class="card-action-bar">
-            ${order.paymentStatus !== "lunas" ? `<button class="btn-cashier-action btn-act-pay" onclick="markOrderPaid('${order.id}')">✓ Tandai Lunas</button>` : ""}
-            ${order.orderStatus === "baru" ? `<button class="btn-cashier-action btn-act-process" onclick="updateOrderStatus('${order.id}', 'diproses')">Mulai Proses</button>` : ""}
-            ${order.orderStatus === "diproses" ? `<button class="btn-cashier-action btn-act-ready" onclick="updateOrderStatus('${order.id}', 'siap')">Siap Diambil</button>` : ""}
-            ${order.orderStatus === "siap" ? `<button class="btn-cashier-action btn-act-done" onclick="updateOrderStatus('${order.id}', 'selesai')">Selesai</button>` : ""}
-          </div>
-        `;
-        grid.appendChild(card);
-      });
-    }
-
-    function updateOrderStatus(orderId, newStatus) {
-      const order = ordersList.find(o => o.id === orderId);
-      if (order) {
-        order.orderStatus = newStatus;
-        try { localStorage.setItem("corei_orders", JSON.stringify(ordersList)); } catch(e) {}
-        updateKasirView();
-        if (lastCompletedOrder && lastCompletedOrder.id === orderId) {
-          updateStatusTracker(newStatus);
-        }
-      }
-    }
-
-    function markOrderPaid(orderId) {
-      const order = ordersList.find(o => o.id === orderId);
-      if (order) {
-        order.paymentStatus = "lunas";
-        try { localStorage.setItem("corei_orders", JSON.stringify(ordersList)); } catch(e) {}
-        updateKasirView();
-      }
-    }
-
-    function clearAllOrders() {
-      if (confirm("Bersihkan semua pesanan kasir?")) {
-        ordersList = [];
-        try { localStorage.removeItem("corei_orders"); } catch(e) {}
-        updateKasirView();
-      }
     }
 
     // ==========================================
@@ -2180,13 +2003,6 @@
       renderProducts(cat);
     }
 
-    function toggleTheme() {
-      const root = document.documentElement;
-      const current = root.getAttribute("data-theme") || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-      const next = current === "dark" ? "light" : "dark";
-      root.setAttribute("data-theme", next);
-    }
-
     function openQrModal() {
       document.getElementById("qr-modal").classList.add("open");
     }
@@ -2216,7 +2032,7 @@
 
     // Initial render
     renderProducts("Semua");
-    updateKasirView();
+    restoreCustomerOrderFromUrl();
   </script>
 </body>
 </html>
