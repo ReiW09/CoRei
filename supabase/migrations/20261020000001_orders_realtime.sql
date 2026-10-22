@@ -84,6 +84,10 @@ DROP POLICY IF EXISTS "Public read active cafes" ON public.cafes;
 DROP POLICY IF EXISTS "Customer read own order by public_id" ON public.orders;
 DROP POLICY IF EXISTS "Customer insert order" ON public.orders;
 DROP POLICY IF EXISTS "Staff manage orders" ON public.orders;
+DROP POLICY IF EXISTS "Cafe members can read their cafe" ON public.cafes;
+DROP POLICY IF EXISTS "Members can read their memberships" ON public.cafe_memberships;
+DROP POLICY IF EXISTS "Public can read cafe menu" ON public.menu_variants;
+DROP POLICY IF EXISTS "Cafe members can read orders" ON public.orders;
 
 DO $$
 BEGIN
