@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Kelola Menu — CoRei</title>
+  <meta name="theme-color" content="#1B5E52">
+  <link rel="icon" href="icon-192.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#F8FAF9;--surface:#FFF;--surface-subtle:#F1F5F3;--ink:#14211D;--muted:#5C6E67;--line:#E2E8E5;--accent:#1B5E52;--accent-subtle:#E8F3F0;--accent-ink:#FFF;--promo:#E18700;--promo-bg:#FEF3E2;--promo-ink:#7A4400;--success:#16A34A;--success-bg:#DCFCE7;--danger:#D9383A;--danger-bg:#FDE8E8;color-scheme:light}
+    @media(prefers-color-scheme:dark){:root{--bg:#0D1614;--surface:#15221F;--surface-subtle:#1C2D29;--ink:#EEF4F1;--muted:#8FA49C;--line:#263832;--accent:#5CC8AF;--accent-subtle:#132D26;--accent-ink:#0A1412;--promo:#FBBF24;--promo-bg:#352605;--promo-ink:#FDE68A;--success:#34D399;--success-bg:#0E3426;--danger:#F87171;--danger-bg:#391515;color-scheme:dark}}
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "Plus Jakarta Sans",system-ui,sans-serif;padding:env(safe-area-inset-top) 16px calc(24px + env(safe-area-inset-bottom))}
+    button,input,select{font:inherit}
+    button,a,input,select{touch-action:manipulation}
+    button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+    main{max-width:1080px;margin:auto}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:22px 0;border-bottom:1px solid var(--line)}
+    h1,h2,h3{font-family:"Bricolage Grotesque",system-ui,sans-serif;line-height:1.2}
+    .brand h1{font-size:25px;margin:0}
+    .brand p{margin:4px 0 0;color:var(--muted);font-size:13px}
+    .topbar a{color:var(--accent);font-weight:700;text-decoration:none}
+    .panel{max-width:420px;margin:50px auto;padding:24px;background:var(--surface);border:1px solid var(--line);border-radius:20px;box-shadow:0 8px 24px #10201812}
+    .panel h2{margin:0 0 6px}
+    .muted{color:var(--muted)}
+    label{display:block;margin:16px 0 5px;font-weight:600;font-size:13px}
+    input[type="email"],input[type="password"]{width:100%;min-height:46px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink)}
+    button{cursor:pointer}
+    .primary,.action-btn{border:0;border-radius:10px;background:var(--accent);color:var(--accent-ink);font-weight:700;min-height:44px;padding:10px 16px}
+    .primary{width:100%;margin-top:20px}
+    .primary:disabled{opacity:.55;cursor:wait}
+    .error{margin-top:12px;padding:11px;border-radius:10px;background:var(--danger-bg);color:var(--danger);font-size:13px}
+    .hidden{display:none!important}
+
+    /* Menu Admin Panel */
+    .admin-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:22px 0;flex-wrap:wrap}
+    .admin-heading h2{margin:0}
+    .heading-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .btn-logout{padding:8px 16px;border-radius:10px;background:var(--surface-subtle);color:var(--ink);border:1px solid var(--line);font-weight:600;font-size:13px}
+    .btn-refresh{padding:8px 16px;border-radius:10px;background:var(--accent-subtle);color:var(--accent);border:1px solid var(--accent);font-weight:600;font-size:13px}
+
+    /* Search Bar */
+    .search-wrap{margin-bottom:16px}
+    .search-input{width:100%;max-width:360px;min-height:38px;padding:6px 14px;font-size:14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+
+    /* Menu Cards Grid */
+    .menu-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));gap:14px}
+    .menu-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 3px 12px #1020180a;transition:border-color .15s}
+    .menu-card.inactive{opacity:.55;border-style:dashed}
+    .menu-card.dirty{border-color:var(--promo)}
+    .menu-card.saved{border-color:var(--success)}
+
+    /* Card Header */
+    .card-header{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:12px}
+    .card-title{flex:1}
+    .product-name{font-family:"Bricolage Grotesque",system-ui,sans-serif;font-size:17px;font-weight:700;color:var(--ink)}
+    .variant-label{font-size:13px;color:var(--muted);margin-top:2px}
+    .tag-badge{padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;white-space:nowrap}
+    .tag-promo{background:var(--promo-bg);color:var(--promo-ink)}
+    .tag-favorit{background:var(--accent-subtle);color:var(--accent)}
+    .tag-baru{background:var(--success-bg);color:var(--success)}
+
+    /* Toggle Switch */
+    .toggle-wrap{display:flex;align-items:center;gap:8px;flex-shrink:0}
+    .toggle-label{font-size:12px;color:var(--muted);font-weight:600}
+    .toggle{position:relative;width:44px;height:24px;flex-shrink:0}
+    .toggle input{opacity:0;width:0;height:0}
+    .slider{position:absolute;inset:0;background:var(--line);border-radius:999px;cursor:pointer;transition:.2s}
+    .slider:before{content:"";position:absolute;height:18px;width:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s}
+    .toggle input:checked + .slider{background:var(--accent)}
+    .toggle input:checked + .slider:before{transform:translateX(20px)}
+
+    /* Fields */
+    .fields{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+    .field-group{display:flex;flex-direction:column;gap:4px}
+    .field-label{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase}
+    .field-input{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font-size:14px;font-weight:600;transition:border-color .15s}
+    .field-input:focus{outline:none;border-color:var(--accent)}
+    .field-select{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font-size:14px;font-weight:600;transition:border-color .15s;cursor:pointer}
+    .field-select:focus{outline:none;border-color:var(--accent)}
+    .field-name{grid-column:1/-1}
+
+    /* Save Button */
+    .card-footer{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+    .btn-save{padding:8px 20px;border-radius:10px;background:var(--accent);color:var(--accent-ink);border:0;font-weight:700;font-size:14px;cursor:pointer;transition:opacity .15s}
+    .btn-save:disabled{opacity:.45;cursor:wait}
+    .save-msg{font-size:12px;font-weight:600}
+    .save-msg.ok{color:var(--success)}
+    .save-msg.err{color:var(--danger)}
+
+    /* Empty State */
+    .empty-state{text-align:center;padding:48px 20px;color:var(--muted);grid-column:1/-1;background:var(--surface);border:1px solid var(--line);border-radius:16px}
+
+    /* Loading */
+    .loading-row{text-align:center;padding:48px;color:var(--muted);grid-column:1/-1}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .spinner{display:inline-block;width:24px;height:24px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin-bottom:8px}
+  </style>
+</head>
+<body>
+  <main>
+    <header class="topbar">
+      <div class="brand"><h1>⚙️ Kelola Menu</h1><p>CoRei · Manajemen varian menu</p></div>
+      <a href="kasir.html">← Kembali ke Kasir</a>
+    </header>
+
+    <!-- Login Panel -->
+    <section id="login-panel" class="panel">
+      <h2>Masuk staf</h2>
+      <p class="muted">Gunakan akun staf CoRei untuk mengelola menu.</p>
+      <form id="login-form">
+        <label for="email">Email</label>
+        <input id="email" type="email" autocomplete="username" required>
+        <label for="password">Password</label>
+        <input id="password" type="password" autocomplete="current-password" required>
+        <button id="login-button" class="primary" type="submit">Masuk</button>
+      </form>
+      <div id="login-error" class="error hidden" role="alert"></div>
+    </section>
+
+    <!-- Admin Panel -->
+    <section id="admin-panel" class="hidden">
+      <div class="admin-heading">
+        <div>
+          <h2>Daftar Menu</h2>
+          <p class="muted" id="menu-count" style="margin:2px 0 0;font-size:13px;">Memuat...</p>
+        </div>
+        <div class="heading-actions">
+          <button class="btn-refresh" id="refresh-btn" type="button">🔄 Refresh</button>
+          <button class="btn-logout" id="logout-btn" type="button">Keluar</button>
+        </div>
+      </div>
+
+      <div class="search-wrap">
+        <input id="search-input" class="search-input" type="search" placeholder="Cari nama produk atau varian...">
+      </div>
+
+      <div id="menu-grid" class="menu-grid">
+        <div class="loading-row">
+          <div class="spinner"></div>
+          <div>Memuat menu...</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+
+    const SUPABASE_URL = "https://jxobibhyboralwephbij.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_W5RbkqXs3oNyvF6ZCPczQg_zFUIL2rI";
+    const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { persistSession: true, autoRefreshToken: true }
+    });
+
+    const loginPanel   = document.getElementById("login-panel");
+    const adminPanel   = document.getElementById("admin-panel");
+    const loginForm    = document.getElementById("login-form");
+    const loginError   = document.getElementById("login-error");
+    const loginButton  = document.getElementById("login-button");
+    const menuGrid     = document.getElementById("menu-grid");
+    const menuCount    = document.getElementById("menu-count");
+    const searchInput  = document.getElementById("search-input");
+    const refreshBtn   = document.getElementById("refresh-btn");
+    const logoutBtn    = document.getElementById("logout-btn");
+
+    let allMenuItems = [];
+
+    // ── Auth ───────────────────────────────────────────────────
+    client.auth.onAuthStateChange(async (_event, session) => {
+      if (session) {
+        loginPanel.classList.add("hidden");
+        adminPanel.classList.remove("hidden");
+        await loadMenu();
+      } else {
+        loginPanel.classList.remove("hidden");
+        adminPanel.classList.add("hidden");
+      }
+    });
+
+    loginForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      loginButton.disabled = true;
+      loginButton.textContent = "Masuk...";
+      loginError.classList.add("hidden");
+      const email    = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+      const { error } = await client.auth.signInWithPassword({ email, password });
+      if (error) {
+        loginError.textContent = "Login gagal: " + error.message;
+        loginError.classList.remove("hidden");
+        loginButton.disabled = false;
+        loginButton.textContent = "Masuk";
+      }
+    });
+
+    logoutBtn.addEventListener("click", async () => {
+      await client.auth.signOut();
+    });
+
+    // ── Load Menu ──────────────────────────────────────────────
+    async function loadMenu() {
+      menuGrid.innerHTML = `<div class="loading-row"><div class="spinner"></div><div>Memuat menu...</div></div>`;
+      menuCount.textContent = "Memuat...";
+
+      const { data, error } = await client.rpc("get_all_menu_variants");
+      if (error) {
+        menuGrid.innerHTML = `<div class="empty-state">⚠️ Gagal memuat menu: ${error.message}</div>`;
+        menuCount.textContent = "Gagal memuat";
+        return;
+      }
+
+      allMenuItems = Array.isArray(data) ? data : [];
+      menuCount.textContent = `${allMenuItems.length} varian menu`;
+      renderMenuCards(allMenuItems);
+    }
+
+    refreshBtn.addEventListener("click", loadMenu);
+
+    // ── Search ─────────────────────────────────────────────────
+    searchInput.addEventListener("input", () => {
+      const q = searchInput.value.toLowerCase().trim();
+      if (!q) { renderMenuCards(allMenuItems); return; }
+      const filtered = allMenuItems.filter(m =>
+        (m.product_name || "").toLowerCase().includes(q) ||
+        (m.variant_label || "").toLowerCase().includes(q)
+      );
+      renderMenuCards(filtered);
+    });
+
+    // ── Render Cards ───────────────────────────────────────────
+    function renderMenuCards(items) {
+      if (!items || items.length === 0) {
+        menuGrid.innerHTML = `<div class="empty-state">Tidak ada menu ditemukan.</div>`;
+        return;
+      }
+      menuGrid.innerHTML = "";
+      items.forEach(item => menuGrid.append(buildCard(item)));
+    }
+
+    function buildCard(item) {
+      const card = document.createElement("div");
+      card.className = "menu-card" + (item.is_active ? "" : " inactive");
+      card.dataset.id = item.id;
+
+      // ── Header ─────────────────────────────────────────────
+      const header = document.createElement("div");
+      header.className = "card-header";
+
+      const titleDiv = document.createElement("div");
+      titleDiv.className = "card-title";
+
+      const prodName = document.createElement("div");
+      prodName.className = "product-name";
+      prodName.textContent = item.product_name;
+
+      const varLabel = document.createElement("div");
+      varLabel.className = "variant-label";
+      varLabel.textContent = item.variant_label || "—";
+
+      titleDiv.append(prodName, varLabel);
+
+      // Toggle aktif
+      const toggleWrap = document.createElement("div");
+      toggleWrap.className = "toggle-wrap";
+      const toggleLbl = document.createElement("span");
+      toggleLbl.className = "toggle-label";
+      toggleLbl.textContent = item.is_active ? "Aktif" : "Nonaktif";
+      const toggleLabel = document.createElement("label");
+      toggleLabel.className = "toggle";
+      const toggleInput = document.createElement("input");
+      toggleInput.type = "checkbox";
+      toggleInput.checked = !!item.is_active;
+      toggleInput.addEventListener("change", () => {
+        toggleLbl.textContent = toggleInput.checked ? "Aktif" : "Nonaktif";
+        card.classList.toggle("inactive", !toggleInput.checked);
+        markDirty(card, saveMsg);
+      });
+      const slider = document.createElement("span");
+      slider.className = "slider";
+      toggleLabel.append(toggleInput, slider);
+      toggleWrap.append(toggleLbl, toggleLabel);
+
+      header.append(titleDiv, toggleWrap);
+
+      // ── Fields ─────────────────────────────────────────────
+      const fields = document.createElement("div");
+      fields.className = "fields";
+
+      // Nama Produk (full width)
+      const fName = makeField("Nama Produk", "text", item.product_name, "field-name", card, null);
+
+      // Varian
+      const fVariant = makeField("Label Varian", "text", item.variant_label || "", "", card, null);
+
+      // Harga
+      const fPrice = makeField("Harga (Rp)", "number", item.price, "", card, null);
+      fPrice.querySelector("input").min = "0";
+
+      // Harga Coret
+      const fCompare = makeField("Harga Coret (Rp)", "number", item.compare_price || 0, "", card, null);
+      fCompare.querySelector("input").min = "0";
+      fCompare.querySelector("input").title = "Isi 0 jika tidak ada harga coret";
+
+      // Tag
+      const fTag = document.createElement("div");
+      fTag.className = "field-group";
+      const tagLbl = document.createElement("div");
+      tagLbl.className = "field-label";
+      tagLbl.textContent = "Tag";
+      const tagSel = document.createElement("select");
+      tagSel.className = "field-select";
+      [["", "— Tidak ada —"], ["promo", "🔥 Promo"], ["favorit", "⭐ Favorit"], ["baru", "🆕 Baru"]].forEach(([val, txt]) => {
+        const opt = document.createElement("option");
+        opt.value = val;
+        opt.textContent = txt;
+        if ((item.tag || "") === val) opt.selected = true;
+        tagSel.append(opt);
+      });
+      tagSel.addEventListener("change", () => markDirty(card, saveMsg));
+      fTag.append(tagLbl, tagSel);
+
+      // Register change listeners for inputs
+      [fName, fVariant, fPrice, fCompare].forEach(fg => {
+        fg.querySelector("input").addEventListener("input", () => markDirty(card, saveMsg));
+      });
+
+      fields.append(fName, fVariant, fPrice, fCompare, fTag);
+
+      // ── Footer ─────────────────────────────────────────────
+      const footer = document.createElement("div");
+      footer.className = "card-footer";
+
+      const saveMsg = document.createElement("span");
+      saveMsg.className = "save-msg";
+
+      const saveBtn = document.createElement("button");
+      saveBtn.className = "btn-save";
+      saveBtn.textContent = "Simpan";
+      saveBtn.addEventListener("click", async () => {
+        saveBtn.disabled = true;
+        saveBtn.textContent = "Menyimpan...";
+        saveMsg.className = "save-msg";
+        saveMsg.textContent = "";
+
+        const newName    = fName.querySelector("input").value.trim();
+        const newVariant = fVariant.querySelector("input").value.trim();
+        const newPrice   = parseInt(fPrice.querySelector("input").value) || 0;
+        const newCompare = parseInt(fCompare.querySelector("input").value) || 0;
+        const newActive  = toggleInput.checked;
+        const newTag     = tagSel.value || null;
+
+        if (!newName) { showMsg(saveMsg, "Nama produk wajib diisi.", "err"); saveBtn.disabled = false; saveBtn.textContent = "Simpan"; return; }
+        if (newPrice < 0) { showMsg(saveMsg, "Harga tidak valid.", "err"); saveBtn.disabled = false; saveBtn.textContent = "Simpan"; return; }
+
+        const { error } = await client.rpc("update_menu_variant", {
+          p_variant_id:    item.id,
+          p_product_name:  newName,
+          p_variant_label: newVariant,
+          p_price:         newPrice,
+          p_compare_price: newCompare,
+          p_is_active:     newActive,
+          p_tag:           newTag || ""
+        });
+
+        saveBtn.disabled = false;
+        saveBtn.textContent = "Simpan";
+
+        if (error) {
+          showMsg(saveMsg, "❌ " + error.message, "err");
+          card.classList.add("dirty");
+          card.classList.remove("saved");
+        } else {
+          // Update local state
+          item.product_name  = newName;
+          item.variant_label = newVariant;
+          item.price         = newPrice;
+          item.compare_price = newCompare;
+          item.is_active     = newActive;
+          item.tag           = newTag;
+          // Update display
+          prodName.textContent = newName;
+          varLabel.textContent = newVariant || "—";
+          showMsg(saveMsg, "✓ Tersimpan", "ok");
+          card.classList.remove("dirty");
+          card.classList.add("saved");
+          setTimeout(() => { card.classList.remove("saved"); saveMsg.textContent = ""; }, 2500);
+        }
+      });
+
+      footer.append(saveMsg, saveBtn);
+      card.append(header, fields, footer);
+      return card;
+    }
+
+    function makeField(labelTxt, type, value, extraClass, card, saveMsg) {
+      const wrap = document.createElement("div");
+      wrap.className = "field-group" + (extraClass ? " " + extraClass : "");
+      const lbl = document.createElement("div");
+      lbl.className = "field-label";
+      lbl.textContent = labelTxt;
+      const inp = document.createElement("input");
+      inp.type = type;
+      inp.value = value ?? "";
+      inp.className = "field-input";
+      if (type === "number") { inp.min = "0"; inp.step = "500"; }
+      wrap.append(lbl, inp);
+      return wrap;
+    }
+
+    function markDirty(card, saveMsg) {
+      card.classList.add("dirty");
+      card.classList.remove("saved");
+      if (saveMsg) { saveMsg.textContent = ""; saveMsg.className = "save-msg"; }
+    }
+
+    function showMsg(el, msg, type) {
+      el.textContent = msg;
+      el.className = "save-msg " + type;
+    }
+  </script>
+</body>
+</html>
