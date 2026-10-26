@@ -24,6 +24,19 @@
     .sound-btn.active{border-color:var(--accent);color:var(--accent)}
     .action.print-btn{background:var(--surface-subtle);color:var(--ink);border:1px solid var(--line);flex:0 0 auto}
     .action.danger{background:var(--danger-bg);color:var(--danger);border:1px solid var(--danger);flex:0 0 auto}
+
+    .report-btn{padding:6px 14px;border-radius:999px;background:var(--accent-subtle);color:var(--accent);border:1px solid var(--accent);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px}
+    .report-modal{position:fixed;inset:0;background:rgba(0,0,0,0.5);display:none;align-items:center;justify-content:center;z-index:999;padding:16px}
+    .report-modal.open{display:flex}
+    .report-content{background:var(--surface);width:100%;max-width:540px;border-radius:20px;border:1px solid var(--line);padding:24px;max-height:90vh;overflow-y:auto;box-shadow:0 12px 32px rgba(0,0,0,0.2)}
+    .report-stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin:16px 0}
+    .stat-card{background:var(--surface-subtle);padding:14px;border-radius:12px;border:1px solid var(--line)}
+    .stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:700}
+    .stat-val{font-size:18px;font-weight:800;font-family:'Bricolage Grotesque',sans-serif;margin-top:4px;color:var(--ink)}
+    .report-table{width:100%;border-collapse:collapse;margin-top:12px;font-size:13px}
+    .report-table th,.report-table td{padding:8px;text-align:left;border-bottom:1px solid var(--line)}
+    .report-table th{color:var(--muted);font-size:11px;text-transform:uppercase}
+
     #receipt-print-area{display:none}
     @media print{
       body * {visibility:hidden!important}
@@ -57,7 +70,8 @@
     <section id="orders-panel" class="hidden" aria-live="polite">
       <div class="orders-heading">
         <div><h2>Pesanan masuk</h2><div id="connection-state" class="connection">Menghubungkan...</div></div>
-        <div style="display:flex;gap:8px;align-items:center">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <button id="report-open-btn" class="report-btn" type="button" title="Lihat Rekap Penjualan & Ekspor CSV">📊 Laporan Omzet</button>
           <button id="sound-toggle-btn" class="sound-btn active" type="button" title="Bunyi notifikasi pesanan baru">🔔 Bunyi: Nyala</button>
           <button id="logout-button" class="action secondary" style="flex:0 0 auto">Keluar</button>
         </div>
@@ -74,6 +88,52 @@
       <div id="kitchen-notice" class="notice hidden" role="status"></div>
       <div id="orders-grid" class="orders-grid"></div>
       <div id="receipt-print-area"></div>
+
+      <!-- Modal Laporan Penjualan & Omzet -->
+      <div id="report-modal" class="report-modal" role="dialog" aria-modal="true">
+        <div class="report-content">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <h2 style="margin:0;font-size:20px;">Laporan Penjualan CoRei</h2>
+            <button type="button" onclick="closeReportModal()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);">&times;</button>
+          </div>
+          <p class="small" style="margin:4px 0 16px;">Ringkasan transaksi dari daftar pesanan kasir</p>
+
+          <div class="report-stats-grid">
+            <div class="stat-card">
+              <div class="stat-label">Total Omzet Lunas</div>
+              <div class="stat-val" id="stat-total-omzet" style="color:var(--success);">Rp0</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Pesanan Lunas</div>
+              <div class="stat-val" id="stat-total-orders">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">QRIS vs Tunai</div>
+              <div class="stat-val" id="stat-payment-split" style="font-size:14px;margin-top:6px;">0 / 0</div>
+            </div>
+          </div>
+
+          <h3 style="font-size:15px;margin:18px 0 6px;">Menu Paling Banyak Dipesan</h3>
+          <div style="max-height:180px;overflow-y:auto;border:1px solid var(--line);border-radius:10px;">
+            <table class="report-table">
+              <thead>
+                <tr>
+                  <th>Menu</th>
+                  <th style="text-align:right;">Terjual</th>
+                  <th style="text-align:right;">Subtotal</th>
+                </tr>
+              </thead>
+              <tbody id="top-items-tbody"></tbody>
+            </table>
+          </div>
+
+          <div style="display:flex;gap:10px;margin-top:20px;flex-wrap:wrap;">
+            <button type="button" class="action" onclick="exportOrdersToCSV()" style="flex:1;background:var(--success);">📥 Ekspor ke CSV (Excel)</button>
+            <button type="button" class="action secondary" onclick="closeReportModal()" style="flex:1;">Tutup</button>
+          </div>
+        </div>
+      </div>
+
     </section>
   </main>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -528,6 +588,108 @@
     });
 
     
+    
+    // ==========================================
+    // LAPORAN OMZET & EKSPOR CSV
+    // ==========================================
+    function openReportModal() {
+      calculateAndRenderReport();
+      document.getElementById("report-modal").classList.add("open");
+    }
+
+    function closeReportModal() {
+      document.getElementById("report-modal").classList.remove("open");
+    }
+
+    document.getElementById("report-open-btn")?.addEventListener("click", openReportModal);
+
+    function calculateAndRenderReport() {
+      let totalOmzet = 0;
+      let paidOrdersCount = 0;
+      let countQris = 0;
+      let countCash = 0;
+      const itemMap = {};
+
+      allOrders.forEach(o => {
+        if (o.payment_status === "lunas" && o.status !== "batal") {
+          totalOmzet += Number(o.total || 0);
+          paidOrdersCount++;
+          if (o.payment_method === "QRIS") countQris++;
+          if (o.payment_method === "Cash") countCash++;
+
+          (o.items || []).forEach(item => {
+            const key = item.productName + " (" + item.variantLabel + ")";
+            if (!itemMap[key]) {
+              itemMap[key] = { qty: 0, revenue: 0 };
+            }
+            itemMap[key].qty += Number(item.qty || 0);
+            itemMap[key].revenue += Number((item.price || 0) * (item.qty || 0));
+          });
+        }
+      });
+
+      document.getElementById("stat-total-omzet").textContent = formatRupiah(totalOmzet);
+      document.getElementById("stat-total-orders").textContent = paidOrdersCount + " pesanan";
+      document.getElementById("stat-payment-split").textContent = "QRIS: " + countQris + " | Cash: " + countCash;
+
+      const tbody = document.getElementById("top-items-tbody");
+      tbody.replaceChildren();
+
+      const sortedItems = Object.entries(itemMap).sort((a, b) => b[1].qty - a[1].qty);
+      if (sortedItems.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--muted);padding:14px;">Belum ada pesanan lunas.</td></tr>';
+      } else {
+        sortedItems.forEach(([name, data]) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td style="font-weight:600;">${name}</td>
+            <td style="text-align:right;">${data.qty}x</td>
+            <td style="text-align:right;">${formatRupiah(data.revenue)}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+    }
+
+    function exportOrdersToCSV() {
+      if (!allOrders.length) {
+        alert("Belum ada data pesanan untuk diekspor.");
+        return;
+      }
+
+      // Header CSV
+      let csvContent = "data:text/csv;charset=utf-8,";
+      csvContent += "No Antrean,Waktu,Nama Pelanggan,Meja,Cara Bayar,Status Bayar,Status Pesanan,Rincian Menu,Total (Rp)\r\n";
+
+      allOrders.forEach(o => {
+        const queue = "#" + String(o.queue_number).padStart(3, "0");
+        const time = new Date(o.created_at).toLocaleString("id-ID", { dateStyle: "short", timeStyle: "short" }).replace(",", "");
+        const name = '"' + (o.customer_name || "").replace(/"/g, '""') + '"';
+        const table = '"' + (o.table_label || "").replace(/"/g, '""') + '"';
+        const method = o.payment_method || "-";
+        const payStatus = o.payment_status === "lunas" ? "Lunas" : "Belum Lunas";
+        const status = o.status || "-";
+        
+        const itemsSummary = (o.items || []).map(i => {
+          const opts = [i.temp, i.ice, i.sweet].filter(Boolean).join("/");
+          return i.qty + "x " + i.productName + "(" + i.variantLabel + (opts ? "-" + opts : "") + ")";
+        }).join(" | ");
+        const itemsClean = '"' + itemsSummary.replace(/"/g, '""') + '"';
+        const total = o.total || 0;
+
+        csvContent += [queue, time, name, table, method, payStatus, status, itemsClean, total].join(",") + "\r\n";
+      });
+
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      const filename = "Laporan_Penjualan_CoRei_" + new Date().toISOString().slice(0, 10) + ".csv";
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", filename);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
     // Auto-restore session jika staf sudah pernah login
     if (client) {
       client.auth.getSession().then(({ data: { session } }) => {
