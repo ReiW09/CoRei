@@ -1074,6 +1074,20 @@
           <div class="error-msg-text" id="name-error">Nama wajib diisi dulu ya.</div>
         </div>
 
+        <div class="form-group">
+          <label class="form-label" for="customer-phone">
+            Nomor HP <span style="color:var(--danger)">*</span>
+          </label>
+          <input type="tel" id="customer-phone" class="text-input" placeholder="Contoh: 081234567890" maxlength="18" autocomplete="tel" inputmode="tel" oninput="onPhoneInput(this)">
+          <div class="error-msg-text" id="phone-error">Masukkan nomor HP yang valid (8–15 angka).</div>
+          <small style="display:block; margin-top:6px; color:var(--ink-muted);">Nomor HP hanya disimpan di perangkat ini untuk pesanan berikutnya; tidak dikirim ke CoRei. Nama tetap dikirim bersama pesanan.</small>
+        </div>
+        <label style="display:flex; align-items:flex-start; gap:8px; margin-top:-6px; font-size:12px; color:var(--ink-muted);">
+          <input type="checkbox" id="save-customer-profile" checked style="margin-top:2px;" onchange="toggleCustomerProfileStorage(this)">
+          Simpan nama dan nomor HP di perangkat ini
+        </label>
+        <small id="profile-storage-message" role="status" style="display:block; margin-top:4px; color:var(--ink-muted);"></small>
+
         <!-- Optional Table Number -->
         <div class="form-group" id="table-input-wrap">
           <label class="form-label" for="table-number">Nomor Meja (Opsional)</label>
@@ -1168,6 +1182,10 @@
       <a href="#" id="btn-wa-link" target="_blank" rel="noopener" class="btn-wa-action">
         <span>💬 Kirim Konfirmasi ke WhatsApp Kafe</span>
       </a>
+
+      <button type="button" class="btn-copy-order" id="btn-copy-order-url" onclick="copyOrderLink(this)" style="display:flex; align-items:center; justify-content:center; gap:8px; width:100%; min-height:46px; background:var(--surface); border:1px solid var(--line); border-radius:12px; font-weight:600; font-size:14px; color:var(--ink); cursor:pointer; margin-bottom:12px;">
+        <span>🔗 Salin Link Pesanan Ini</span>
+      </button>
 
       <button type="button" class="btn-order-again" onclick="resetOrderAndBack()">
         + Pesan Menu Lainnya (Pesan Lagi)
@@ -1617,6 +1635,58 @@
       }
     }
 
+    function onPhoneInput(input) {
+      if (isValidCustomerPhone(input.value)) {
+        input.classList.remove("invalid");
+        document.getElementById("phone-error").classList.remove("show");
+      }
+    }
+
+    function isValidCustomerPhone(value) {
+      const phone = value.trim();
+      const digits = phone.replace(/\D/g, "");
+      return /^\+?[\d\s().-]+$/.test(phone) && digits.length >= 8 && digits.length <= 15;
+    }
+
+    function loadSavedCustomerProfile() {
+      try {
+        const rawProfile = localStorage.getItem("corei-customer-profile");
+        if (!rawProfile) return;
+        const profile = JSON.parse(rawProfile);
+        if (typeof profile.name !== "string" || typeof profile.phone !== "string") {
+          throw new Error("Format data pelanggan tersimpan tidak valid.");
+        }
+        document.getElementById("customer-name").value = profile.name;
+        document.getElementById("customer-phone").value = profile.phone;
+      } catch (error) {
+        console.error("Could not load saved customer profile:", error);
+        document.getElementById("profile-storage-message").textContent = "Data pelanggan tersimpan tidak dapat dibaca di perangkat ini.";
+      }
+    }
+
+    function toggleCustomerProfileStorage(checkbox) {
+      if (checkbox.checked) return;
+      try {
+        localStorage.removeItem("corei-customer-profile");
+        document.getElementById("profile-storage-message").textContent = "Data tersimpan di perangkat ini telah dihapus.";
+      } catch (error) {
+        console.error("Could not remove saved customer profile:", error);
+        document.getElementById("profile-storage-message").textContent = "Data tersimpan tidak dapat dihapus dari perangkat ini.";
+      }
+    }
+
+    function saveCustomerProfile(name, phone) {
+      const saveProfile = document.getElementById("save-customer-profile").checked;
+      if (saveProfile) {
+        localStorage.setItem("corei-customer-profile", JSON.stringify({ name, phone }));
+      } else {
+        localStorage.removeItem("corei-customer-profile");
+      }
+      document.getElementById("profile-storage-message").textContent = saveProfile
+        ? "Data pelanggan tersimpan di perangkat ini."
+        : "Data tersimpan di perangkat ini telah dihapus.";
+    }
+
     // Generate formatted WhatsApp message matching Section 2
     function buildWhatsAppText(customerName, paymentMethod, items, total) {
       let lines = `Halo CoRei, saya mau pesan:\n`;
@@ -1650,6 +1720,8 @@
 
       const nameInput = document.getElementById("customer-name");
       const name = nameInput.value.trim();
+      const phoneInput = document.getElementById("customer-phone");
+      const phone = phoneInput.value.trim();
 
       // Validation 1: Customer Name
       if (!name) {
@@ -1659,7 +1731,14 @@
         return;
       }
 
-      // Validation 2: Payment Method
+      if (!isValidCustomerPhone(phone)) {
+        phoneInput.classList.add("invalid");
+        document.getElementById("phone-error").classList.add("show");
+        phoneInput.focus();
+        return;
+      }
+
+      // Validation 3: Payment Method
       if (!selectedPaymentMethod) {
         document.getElementById("pay-error").classList.add("show");
         return;
@@ -1698,6 +1777,13 @@
         if (error) throw error;
         if (!data || !data.public_id || !Array.isArray(data.items)) {
           throw new Error("Respons pesanan tidak lengkap. Silakan periksa status pesanan sebelum mencoba lagi.");
+        }
+
+        try {
+          saveCustomerProfile(name, phone);
+        } catch (storageError) {
+          console.error("Could not save customer profile on this device:", storageError);
+          document.getElementById("profile-storage-message").textContent = "Pesanan terkirim, tetapi data tidak dapat disimpan di perangkat ini.";
         }
 
         const orderRecord = {
@@ -1837,11 +1923,14 @@
       notice.textContent = messages[status] || "Status pesanan diperbarui.";
       notice.hidden = false;
 
-      if (announce && status === "siap" && "Notification" in window && Notification.permission === "granted") {
-        new Notification("Pesanan CoRei siap diambil", {
-          body: `Nomor antrean ${lastCompletedOrder?.queueNumber || ""}`,
-          icon: "icon-192.png"
-        });
+      if (announce && status === "siap") {
+        playReadySoundAndVibrate();
+        if ("Notification" in window && Notification.permission === "granted") {
+          new Notification("Pesanan CoRei siap diambil", {
+            body: `Nomor antrean ${lastCompletedOrder?.queueNumber || ""}`,
+            icon: "icon-192.png"
+          });
+        }
       }
     }
 
@@ -1914,6 +2003,8 @@
       cart = {};
       selectedPaymentMethod = "";
       document.getElementById("customer-name").value = "";
+      document.getElementById("customer-phone").value = "";
+      loadSavedCustomerProfile();
       document.getElementById("btn-pay-qris").classList.remove("selected");
       document.getElementById("btn-pay-cash").classList.remove("selected");
       document.getElementById("qris-preview-box").style.display = "none";
@@ -1960,9 +2051,50 @@
       } catch(e) {}
     }
 
+    function playReadySoundAndVibrate() {
+      // Getar perangkat jika didukung
+      if (typeof navigator !== "undefined" && navigator.vibrate) {
+        try { navigator.vibrate([200, 100, 200]); } catch(e) {}
+      }
+
+      // Suara bel ceria (3 nada naik: Do - Mi - Sol)
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const notes = [523.25, 659.25, 783.99]; // C5, E5, G5
+        notes.forEach((freq, idx) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          const startTime = audioCtx.currentTime + (idx * 0.15);
+          osc.type = "triangle";
+          osc.frequency.setValueAtTime(freq, startTime);
+          gain.gain.setValueAtTime(0.3, startTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.3);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(startTime);
+          osc.stop(startTime + 0.3);
+        });
+      } catch(e) {}
+    }
+
     // ==========================================
     // PRINT RECEIPT
     // ==========================================
+        function copyOrderLink(button) {
+      const url = window.location.href;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(() => {
+          const originalText = button.innerHTML;
+          button.innerHTML = "<span>✓ Link berhasil disalin!</span>";
+          setTimeout(() => { button.innerHTML = originalText; }, 2500);
+        }).catch(() => {
+          prompt("Salin tautan pesananmu:", url);
+        });
+      } else {
+        prompt("Salin tautan pesananmu:", url);
+      }
+    }
+
     function printReceipt() {
       if (!lastCompletedOrder) return;
       const o = lastCompletedOrder;
@@ -2031,6 +2163,7 @@
     }
 
     // Initial render
+    loadSavedCustomerProfile();
     renderProducts("Semua");
     restoreCustomerOrderFromUrl();
   </script>

@@ -1,0 +1,14 @@
+node_modules
+.next/
+www/
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android-kasir/.gradle/
+android-kasir/build/
+android-kasir/app/build/
+android-kasir/local.properties
+www-kasir/
+*.apk
+tsconfig.tsbuildinfo

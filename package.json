@@ -1,0 +1,23 @@
+{
+  "name": "corei-android",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build:web": "node scripts/prepare-android-web.mjs",
+    "android:sync": "npm run build:web && cap sync android",
+    "android:open": "cap open android",
+    "android:apk": "npm run android:sync && cd android && gradlew.bat assembleDebug",
+    "build:web:cashier": "node scripts/prepare-android-web.mjs --cashier",
+    "android:add:cashier": "npm run build:web:cashier && node scripts/android-cashier.mjs add",
+    "android:sync:cashier": "npm run build:web:cashier && node scripts/android-cashier.mjs sync",
+    "android:apk:cashier": "npm run android:sync:cashier && cd android-kasir && gradlew.bat assembleDebug"
+  },
+  "dependencies": {
+    "@capacitor/android": "8.5.3",
+    "@capacitor/core": "8.5.3"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "8.5.3",
+    "uuid": "^7.0.3"
+  }
+}

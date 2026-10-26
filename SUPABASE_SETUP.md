@@ -1,4 +1,4 @@
-# Menyiapkan pesanan realtime CoRei
+   # Menyiapkan pesanan realtime CoRei
 
 Halaman pelanggan ada di `index.html`; halaman staf terpisah ada di `kasir.html`.
 Status pesanan dikirim realtime melalui Supabase. Pelanggan melihat pemberitahuan
@@ -23,6 +23,9 @@ service-role key di file ini atau file yang dipublikasikan.
 Di Supabase Dashboard, buka **SQL Editor → New query**, lalu jalankan sekali:
 
 `supabase/migrations/20261020000001_orders_realtime.sql`
+
+Untuk nomor antrean yang urut dan reset setiap **awal bulan** (bukan harian), jalankan juga query:
+`supabase/migrations/20261026000001_monthly_queue_number.sql`
 
 Migrasi membuat kafe CoRei, enam varian menu, tabel pesanan, fungsi transaksi,
 akses realtime, dan kebijakan RLS. Jika ada error, hentikan setup dan periksa
@@ -63,3 +66,38 @@ tautan privat pelanggan tersebut.
 Halaman kasir memerlukan koneksi internet dan login. Pemberitahuan pelanggan
 berjalan realtime saat halaman status terbuka. Push notification ketika browser
 ditutup belum disiapkan.
+
+## 5. Siapkan APK Android pelanggan
+
+APK Android membungkus halaman pelanggan saja; halaman kasir tidak dimasukkan.
+Pesanan dan pembaruan status tetap memerlukan koneksi internet. Formulir pesanan
+meminta nama dan nomor HP. Nomor HP dan nama tersimpan hanya di perangkat
+pelanggan untuk pengisian otomatis berikutnya; nomor HP tidak dikirim ke
+database CoRei dan tidak diverifikasi sebagai identitas/akun. Nama pesanan tetap
+dikirim ke kasir. Pelanggan dapat menonaktifkan penyimpanan lokal melalui kotak
+centang pada formulir.
+
+1. Pasang Node.js 22 atau lebih baru, Java JDK 21, dan Android Studio dengan
+   Android SDK yang direkomendasikan.
+2. Dari folder proyek, jalankan `npm install`.
+3. Jalankan `npm run android:apk`. Gradle menghasilkan APK debug di
+   `android/app/build/outputs/apk/debug/app-debug.apk`.
+4. Salin APK ke ponsel Android untuk instalasi. Android mungkin meminta izin
+   memasang aplikasi dari sumber ini.
+
+Jika memakai Android Studio, jalankan `npm run android:sync`, lalu
+`npm run android:open`. Untuk dibagikan di luar pengujian, buat APK rilis yang
+ditandatangani dengan signing key milik pemilik aplikasi; jangan membagikan
+debug APK sebagai rilis publik.
+
+## 6. Siapkan APK Android kasir
+
+APK kasir adalah aplikasi terpisah dari APK pelanggan, sehingga keduanya dapat
+dipasang bersamaan. Aplikasi kasir hanya untuk staf CoRei yang akunnya sudah
+terdaftar di `cafe_memberships`.
+
+1. Buat proyek Android kasir sekali dengan `npm run android:add:cashier`.
+2. Jalankan `npm run android:apk:cashier`. Gradle menghasilkan APK di
+   `android-kasir/app/build/outputs/apk/debug/app-debug.apk`.
+3. Salin APK ke HP staf untuk dipasang. Login memakai email dan password staf
+   CoRei. Jangan membagikan APK debug sebagai rilis publik.

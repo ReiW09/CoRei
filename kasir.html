@@ -13,6 +13,27 @@
     :root{--bg:#F8FAF9;--surface:#FFF;--surface-subtle:#F1F5F3;--ink:#14211D;--muted:#5C6E67;--line:#E2E8E5;--accent:#1B5E52;--accent-subtle:#E8F3F0;--accent-ink:#FFF;--promo:#E18700;--promo-bg:#FEF3E2;--promo-ink:#7A4400;--success:#16A34A;--success-bg:#DCFCE7;--danger:#D9383A;--danger-bg:#FDE8E8;color-scheme:light}
     @media(prefers-color-scheme:dark){:root{--bg:#0D1614;--surface:#15221F;--surface-subtle:#1C2D29;--ink:#EEF4F1;--muted:#8FA49C;--line:#263832;--accent:#5CC8AF;--accent-subtle:#132D26;--accent-ink:#0A1412;--promo:#FBBF24;--promo-bg:#352605;--promo-ink:#FDE68A;--success:#34D399;--success-bg:#0E3426;--danger:#F87171;--danger-bg:#391515;color-scheme:dark}}
     *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "Plus Jakarta Sans",system-ui,sans-serif;padding:env(safe-area-inset-top) 16px calc(24px + env(safe-area-inset-bottom))}button,input{font:inherit}button,a,input{touch-action:manipulation}button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}main{max-width:1080px;margin:auto}.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:22px 0;border-bottom:1px solid var(--line)}h1,h2,h3{font-family:"Bricolage Grotesque",system-ui,sans-serif;line-height:1.2}.brand h1{font-size:25px;margin:0}.brand p{margin:4px 0 0;color:var(--muted);font-size:13px}.topbar a{color:var(--accent);font-weight:700;text-decoration:none}.panel{max-width:420px;margin:50px auto;padding:24px;background:var(--surface);border:1px solid var(--line);border-radius:20px;box-shadow:0 8px 24px #10201812}.panel h2{margin:0 0 6px}.muted{color:var(--muted)}label{display:block;margin:16px 0 5px;font-weight:600;font-size:13px}input{width:100%;min-height:46px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink)}button{cursor:pointer}.primary,.action{border:0;border-radius:10px;background:var(--accent);color:var(--accent-ink);font-weight:700;min-height:44px;padding:10px 16px}.primary{width:100%;margin-top:20px}.primary:disabled,.action:disabled{opacity:.55;cursor:wait}.error{margin-top:12px;padding:11px;border-radius:10px;background:var(--danger-bg);color:var(--danger);font-size:13px}.hidden{display:none!important}.orders-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:22px 0}.orders-heading h2{margin:0}.orders-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,320px),1fr));gap:14px}.order-card{background:var(--surface);border:1px solid var(--line);border-top:4px solid var(--promo);border-radius:16px;padding:16px;box-shadow:0 3px 12px #1020180a}.order-card[data-status="diproses"]{border-top-color:var(--accent)}.order-card[data-status="siap"]{border-top-color:var(--success)}.order-meta,.order-name,.order-total,.card-actions{display:flex;align-items:center;justify-content:space-between;gap:10px}.queue{font:800 22px "Bricolage Grotesque",system-ui,sans-serif;color:var(--accent)}.time,.small{font-size:12px;color:var(--muted)}.order-name{margin-top:6px;font-weight:700}.order-items{padding:10px 0;margin:8px 0;border-top:1px dashed var(--line);border-bottom:1px dashed var(--line)}.order-item{padding:4px 0}.note{color:var(--promo-ink);font-size:12px}.pill{border-radius:999px;padding:3px 9px;background:var(--promo-bg);color:var(--promo-ink);font-size:11px;font-weight:700}.pill.paid{background:var(--success-bg);color:var(--success)}.order-total{font-weight:700}.card-actions{justify-content:flex-start;flex-wrap:wrap;margin-top:12px}.action{flex:1 1 130px;min-height:42px}.action.secondary{background:var(--surface-subtle);color:var(--ink)}.empty{grid-column:1/-1;text-align:center;padding:34px 18px;background:var(--surface);border:1px solid var(--line);border-radius:16px;color:var(--muted)}.connection{font-size:12px;color:var(--muted);margin:10px 0}.notice{margin:15px 0;padding:12px;border-radius:10px;background:var(--promo-bg);color:var(--promo-ink);font-size:13px}
+    .order-card[data-status="selesai"]{border-top-color:var(--muted);opacity:.85}
+    .order-card[data-status="batal"]{border-top-color:var(--danger);opacity:.7}
+    .pill.batal{background:var(--danger-bg);color:var(--danger)}
+    .filter-bar{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0;align-items:center}
+    .filter-chip{padding:6px 14px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;transition:all .15s}
+    .filter-chip.active{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+    .search-input{flex:1 1 180px;min-height:36px;padding:6px 14px;font-size:13px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+    .sound-btn{padding:6px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-size:12px;font-weight:600;cursor:pointer;color:var(--ink);display:flex;align-items:center;gap:6px}
+    .sound-btn.active{border-color:var(--accent);color:var(--accent)}
+    .action.print-btn{background:var(--surface-subtle);color:var(--ink);border:1px solid var(--line);flex:0 0 auto}
+    .action.danger{background:var(--danger-bg);color:var(--danger);border:1px solid var(--danger);flex:0 0 auto}
+    #receipt-print-area{display:none}
+    @media print{
+      body * {visibility:hidden!important}
+      #receipt-print-area, #receipt-print-area * {visibility:visible!important}
+      #receipt-print-area {display:block!important;position:fixed;left:0;top:0;width:58mm;padding:8px;font-family:monospace;font-size:11px;color:#000;background:#fff}
+      #receipt-print-area .r-center{text-align:center}
+      #receipt-print-area .r-bold{font-weight:bold}
+      #receipt-print-area .r-line{border-top:1px dashed #000;margin:6px 0}
+      #receipt-print-area .r-flex{display:flex;justify-content:space-between}
+    }
   </style>
 </head>
 <body>
@@ -36,10 +57,23 @@
     <section id="orders-panel" class="hidden" aria-live="polite">
       <div class="orders-heading">
         <div><h2>Pesanan masuk</h2><div id="connection-state" class="connection">Menghubungkan...</div></div>
-        <button id="logout-button" class="action secondary">Keluar</button>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button id="sound-toggle-btn" class="sound-btn active" type="button" title="Bunyi notifikasi pesanan baru">🔔 Bunyi: Nyala</button>
+          <button id="logout-button" class="action secondary" style="flex:0 0 auto">Keluar</button>
+        </div>
+      </div>
+      <div class="filter-bar">
+        <button class="filter-chip active" data-filter="aktif">Pesanan Aktif</button>
+        <button class="filter-chip" data-filter="baru">Baru</button>
+        <button class="filter-chip" data-filter="diproses">Diproses</button>
+        <button class="filter-chip" data-filter="siap">Siap</button>
+        <button class="filter-chip" data-filter="selesai">Selesai</button>
+        <button class="filter-chip" data-filter="semua">Semua</button>
+        <input id="search-orders" class="search-input" type="search" placeholder="Cari #antrean atau nama...">
       </div>
       <div id="kitchen-notice" class="notice hidden" role="status"></div>
       <div id="orders-grid" class="orders-grid"></div>
+      <div id="receipt-print-area"></div>
     </section>
   </main>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -56,6 +90,187 @@
     const connectionState = document.getElementById("connection-state");
     let kitchenChannel = null;
     let currentCafeId = null;
+    let allOrders = [];
+    let currentFilter = "aktif";
+    let searchQuery = "";
+    let soundEnabled = true;
+    let knownOrderIds = new Set();
+    let initialLoadDone = false;
+
+    function playNewOrderSound() {
+      if (!soundEnabled) return;
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+        const ctx = new AudioContext();
+        const now = ctx.currentTime;
+        
+        const osc1 = ctx.createOscillator();
+        const gain1 = ctx.createGain();
+        osc1.type = "sine";
+        osc1.frequency.setValueAtTime(587.33, now);
+        gain1.gain.setValueAtTime(0.3, now);
+        gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+        osc1.connect(gain1);
+        gain1.connect(ctx.destination);
+        osc1.start(now);
+        osc1.stop(now + 0.35);
+
+        const osc2 = ctx.createOscillator();
+        const gain2 = ctx.createGain();
+        osc2.type = "sine";
+        osc2.frequency.setValueAtTime(880.00, now + 0.15);
+        gain2.gain.setValueAtTime(0.35, now + 0.15);
+        gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+        osc2.connect(gain2);
+        gain2.connect(ctx.destination);
+        osc2.start(now + 0.15);
+        osc2.stop(now + 0.6);
+      } catch (err) {
+        console.warn("Audio error:", err);
+      }
+    }
+
+    function initFilterAndSoundUI() {
+      const soundBtn = document.getElementById("sound-toggle-btn");
+      if (soundBtn) {
+        soundBtn.addEventListener("click", () => {
+          soundEnabled = !soundEnabled;
+          soundBtn.textContent = soundEnabled ? "🔔 Bunyi: Nyala" : "🔕 Bunyi: Mati";
+          soundBtn.classList.toggle("active", soundEnabled);
+          if (soundEnabled) playNewOrderSound();
+        });
+      }
+
+      document.querySelectorAll(".filter-chip").forEach(btn => {
+        btn.addEventListener("click", () => {
+          document.querySelectorAll(".filter-chip").forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+          currentFilter = btn.dataset.filter;
+          applyFiltersAndRender();
+        });
+      });
+
+      const searchInput = document.getElementById("search-orders");
+      if (searchInput) {
+        searchInput.addEventListener("input", e => {
+          searchQuery = (e.target.value || "").trim().toLowerCase();
+          applyFiltersAndRender();
+        });
+      }
+    }
+
+    function applyFiltersAndRender() {
+      let filtered = allOrders;
+      if (currentFilter === "aktif") {
+        filtered = filtered.filter(o => o.status === "baru" || o.status === "diproses" || o.status === "siap");
+      } else if (currentFilter !== "semua") {
+        filtered = filtered.filter(o => o.status === currentFilter);
+      }
+      if (searchQuery) {
+        filtered = filtered.filter(o => {
+          const queueStr = "#" + String(o.queue_number).padStart(3, "0");
+          const nameStr = (o.customer_name || "").toLowerCase();
+          const tableStr = (o.table_label || "").toLowerCase();
+          return queueStr.toLowerCase().includes(searchQuery) ||
+                 nameStr.includes(searchQuery) ||
+                 tableStr.includes(searchQuery);
+        });
+      }
+      renderOrders(filtered);
+    }
+
+    
+    function printKitchenTicket(order) {
+      const printArea = document.getElementById("receipt-print-area");
+      if (!printArea) return;
+      
+      const queue = "#" + String(order.queue_number).padStart(3, "0");
+      const dateStr = new Date(order.created_at).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
+      
+      let itemsHtml = "";
+      (order.items || []).forEach(item => {
+        // Cek promo (misalnya Aren, atau jika ada tag Promo)
+        const isPromo = (item.productName && item.productName.toLowerCase().includes("aren")) || (item.variantId && item.variantId.includes("aren"));
+        const promoBadge = isPromo ? '<span style="border:1px solid #000;padding:1px 4px;font-size:10px;font-weight:bold;margin-left:6px;">PROMO</span>' : '';
+
+        // Opsi Suhu, Es, Manis sesuai pesanan pertama
+        const options = [
+          item.temp ? "Suhu: " + item.temp : "",
+          item.ice && item.temp !== "Hot" ? "Es: " + item.ice : "",
+          item.sweet ? "Manis: " + item.sweet : ""
+        ].filter(Boolean).join(" | ");
+
+        itemsHtml += `
+          <div style="margin: 8px 0; padding-bottom: 6px; border-bottom: 1px dotted #888;">
+            <div style="font-size: 13px; font-weight: bold;">
+              ${item.qty}x ${item.productName} (${item.variantLabel})${promoBadge}
+            </div>
+            ${options ? '<div style="font-size: 11px; margin-top: 2px;">' + options + '</div>' : ''}
+            ${item.note ? '<div style="font-size: 11px; font-style: italic; margin-top: 2px;">Catatan: ' + item.note + '</div>' : ''}
+          </div>
+        `;
+      });
+
+      printArea.innerHTML = `
+        <div class="r-center r-bold" style="font-size:17px; letter-spacing:1px; margin-bottom:2px;">COREI COFFEE</div>
+        <div class="r-center" style="font-size:11px; font-weight:bold; margin-bottom:6px;">TIKET PESANAN DAPUR / BARISTA</div>
+        <div class="r-line"></div>
+        <div class="r-flex" style="font-size:14px; font-weight:bold;">
+          <span>NO. PESANAN: ${queue}</span>
+          <span>${dateStr}</span>
+        </div>
+        <div style="font-size:12px; margin-top:4px;">
+          Nama Cust: <strong>${order.customer_name}</strong> ${order.table_label ? '(Meja: ' + order.table_label + ')' : ''}
+        </div>
+        <div class="r-line"></div>
+        ${itemsHtml}
+        <div class="r-center" style="font-size:10px; margin-top:8px;">*** Tiket Produksi Barista & Dapur ***</div>
+      `;
+
+      window.print();
+    }
+
+    function printReceipt(order) {
+      const printArea = document.getElementById("receipt-print-area");
+      if (!printArea) return;
+      
+      const queue = "#" + String(order.queue_number).padStart(3, "0");
+      const dateStr = new Date(order.created_at).toLocaleString("id-ID", { dateStyle: "short", timeStyle: "short" });
+      
+      let itemsHtml = "";
+      (order.items || []).forEach(item => {
+        const options = [item.temp, item.ice && item.temp !== "Hot" ? item.ice : "", item.sweet].filter(Boolean).join(", ");
+        itemsHtml += `
+          <div class="r-flex r-bold">
+            <span>${item.qty}x ${item.productName} (${item.variantLabel})</span>
+            <span>${formatRupiah(item.price * item.qty)}</span>
+          </div>
+          ${options ? '<div style="font-size:10px;color:#333;margin-left:8px;">' + options + '</div>' : ''}
+          ${item.note ? '<div style="font-size:10px;font-style:italic;margin-left:8px;">* ' + item.note + '</div>' : ''}
+        `;
+      });
+
+      printArea.innerHTML = `
+        <div class="r-center r-bold" style="font-size:15px;letter-spacing:1px;">COREI CAFE</div>
+        <div class="r-center" style="font-size:10px;margin-bottom:4px;">Pesanan Kasir & Dapur</div>
+        <div class="r-line"></div>
+        <div class="r-flex"><span>Antrean: <strong style="font-size:14px;">${queue}</strong></span><span>${dateStr}</span></div>
+        <div class="r-flex"><span>Nama: <strong>${order.customer_name}</strong></span><span>${order.table_label ? 'Meja: ' + order.table_label : ''}</span></div>
+        <div class="r-flex"><span>Bayar: ${order.payment_method}</span><span><strong>${order.payment_status === 'lunas' ? 'LUNAS' : 'BELUM LUNAS'}</strong></span></div>
+        <div class="r-line"></div>
+        ${itemsHtml}
+        <div class="r-line"></div>
+        <div class="r-flex r-bold" style="font-size:13px;">
+          <span>TOTAL</span>
+          <span>${formatRupiah(order.total)}</span>
+        </div>
+        <div class="r-line"></div>
+        <div class="r-center" style="font-size:10px;margin-top:6px;">Terima kasih atas kunjungannya!</div>
+      `;
+
+      window.print();
+    }
 
     function showError(message) {
       loginError.textContent = message;
@@ -132,11 +347,24 @@
 
         const actions = document.createElement("div");
         actions.className = "card-actions";
-        if (order.payment_status !== "lunas") {
+
+        const printBtn = makeAction("🖨️ Cetak", "print-btn", () => printReceipt(order));
+        actions.append(printBtn);
+
+        if (order.payment_status !== "lunas" && order.status !== "batal") {
           actions.append(makeAction("✓ Tandai lunas", "secondary", () => updatePayment(order.public_id)));
         }
+        // Tombol Struk Khusus Dapur / Label Barista (Tanpa Total Harga)
+        const kitchenBtn = makeAction("🏷️ Tiket Dapur", "print-btn", () => printKitchenTicket(order));
+        actions.append(kitchenBtn);
+
         const nextStatus = { baru: ["diproses", "Mulai proses"], diproses: ["siap", "Siap diambil"], siap: ["selesai", "Selesai"] }[order.status];
-        if (nextStatus) actions.append(makeAction(nextStatus[1], "", () => updateStatus(order.public_id, nextStatus[0])));
+        if (nextStatus) actions.append(makeAction(nextStatus[1], "", () => updateStatus(order.public_id, nextStatus[0], order)));
+
+        // Tombol Hapus Pesanan Khusus (Memerlukan Kode PIN Pemilik)
+        const deleteBtn = makeAction("🗑️ Hapus", "danger", () => deleteOrderWithPasscode(order.public_id, order.queue_number));
+        actions.append(deleteBtn);
+
         card.append(meta, name, table, items, total, actions);
         ordersGrid.append(card);
       });
@@ -161,10 +389,45 @@
         console.error("Unable to load kitchen orders:", error);
         return;
       }
-      renderOrders(data || []);
+      const orders = data || [];
+      if (initialLoadDone) {
+        let hasNew = false;
+        orders.forEach(o => {
+          if (!knownOrderIds.has(o.public_id) && o.status === "baru") {
+            hasNew = true;
+          }
+        });
+        if (hasNew) playNewOrderSound();
+      }
+      knownOrderIds = new Set(orders.map(o => o.public_id));
+      initialLoadDone = true;
+      allOrders = orders;
+      applyFiltersAndRender();
     }
 
-    async function updateStatus(publicId, status) {
+    
+    async function deleteOrderWithPasscode(publicId, queueNum) {
+      const code = prompt("Masukkan KODE KHUSUS (PIN) untuk menghapus pesanan #" + String(queueNum).padStart(3, "0") + ":");
+      if (!code) return;
+
+      const confirmDel = confirm("Yakin ingin menghapus permanen data pesanan #" + String(queueNum).padStart(3, "0") + "?");
+      if (!confirmDel) return;
+
+      const { error } = await client.rpc("delete_customer_order", {
+        p_public_id: publicId,
+        p_passcode: code.trim()
+      });
+
+      if (error) {
+        alert("Gagal menghapus: " + error.message);
+        return;
+      }
+
+      alert("Pesanan #" + String(queueNum).padStart(3, "0") + " berhasil dihapus.");
+      await loadOrders();
+    }
+
+    async function updateStatus(publicId, status, orderObj) {
       const { error } = await client.rpc("update_customer_order_status", {
         p_public_id: publicId,
         p_status: status
@@ -174,6 +437,13 @@
         return;
       }
       await loadOrders();
+
+      // Jika pesanan telah selesai, otomatis tawarkan / buka struk khusus dapur
+      if (status === "selesai" && orderObj) {
+        if (confirm("Pesanan #" + String(orderObj.queue_number).padStart(3, "0") + " selesai. Ingin cetak Tiket Dapur / Stiker Cup?")) {
+          printKitchenTicket(orderObj);
+        }
+      }
     }
 
     async function updatePayment(publicId) {
@@ -210,6 +480,7 @@
       currentCafeId = cafe.id;
       loginPanel.classList.add("hidden");
       ordersPanel.classList.remove("hidden");
+      initFilterAndSoundUI();
       await loadOrders();
       kitchenChannel = client.channel("kitchen-orders-" + cafe.id)
         .on("postgres_changes", {
@@ -256,7 +527,18 @@
       ordersGrid.replaceChildren();
     });
 
+    
+    // Auto-restore session jika staf sudah pernah login
+    if (client) {
+      client.auth.getSession().then(({ data: { session } }) => {
+        if (session && session.user) {
+          openKitchen(session.user.id);
+        }
+      });
+    }
+
     if (!client) showError("Supabase belum dikonfigurasi. Isi supabase-config.js lalu muat ulang.");
+
   </script>
 </body>
 </html>
