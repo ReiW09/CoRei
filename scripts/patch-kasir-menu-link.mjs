@@ -30,3 +30,4 @@ if (content.includes(OLD_PART)) {
   console.error('ERROR: target not found');
   process.exit(1);
 }
+

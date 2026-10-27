@@ -92,3 +92,4 @@ $$;
 
 GRANT EXECUTE ON FUNCTION public.get_all_menu_variants() TO authenticated;
 GRANT EXECUTE ON FUNCTION public.update_menu_variant(TEXT, TEXT, TEXT, INTEGER, INTEGER, BOOLEAN, TEXT) TO authenticated;
+

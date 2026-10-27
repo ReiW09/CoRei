@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">CoRei</string>
+    <string name="title_activity_main">CoRei</string>
+    <string name="package_name">id.corei.customer</string>
+    <string name="custom_url_scheme">id.corei.customer</string>
+</resources>
