@@ -21,7 +21,7 @@ if (command === "add") {
 
   await cp(customerProject, cashierProject, {
     recursive: true,
-    filter: source => !/(?:^|[\\/])(?:\.gradle|build)(?:[\\/]|$)/.test(source)
+    filter: source => !/(?:^|[\\/])(?:\.gradle|\.idea|build)(?:[\\/]|$)/.test(source)
       && !/[\\/]local\.properties$/.test(source)
       && !/[\\/]assets[\\/]public(?:[\\/]|$)/.test(source)
   });
