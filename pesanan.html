@@ -59,28 +59,29 @@ li{padding:2px 0}
 <script>
 // ===== ISI DUA BARIS INI =====
 var SUPABASE_URL='https://jxobibhyboralwephbij.supabase.co';      // contoh: https://abcdefgh.supabase.co
-var SUPABASE_ANON_KEY='ISI_ANON_KEY_DISINI';    // anon / publishable key, BUKAN service_role
+var SUPABASE_ANON_KEY='sb_publishable_W5RbkqXs3oNyvF6ZCPczQg_zFUIL2rI';    // anon / publishable key, BUKAN service_role
 // =============================
 
 (function(){
   var $=function(id){return document.getElementById(id)};
   var db=null;
   try{if(SUPABASE_URL.indexOf('http')===0)db=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY)}catch(e){}
-  var STATUS_SIAP='selesai';   // status yang berarti kopi sudah jadi
+  var SIAP=['siap','selesai'];   // status yang berarti kopi sudah jadi
   var order=null,game=null,poll=null;
-  var id=new URLSearchParams(location.search).get('id');
+  var qs=new URLSearchParams(location.search);
+  var id=qs.get('id')||qs.get('pesanan');
 
   function showMsg(t){$('msg').textContent=t||''}
 
   function setStatus(s){
-    var siap=s===STATUS_SIAP;
+    var siap=SIAP.indexOf(s)>-1;
     $('chip').textContent=siap?'Siap diambil':(s==='baru'?'Diterima':'Diproses');
     $('chip').className='chip'+(siap?' siap':'');
     if(siap){
       var r=$('ready');
       r.textContent='Kopimu sudah jadi, silakan diambil! ☕';
       r.classList.remove('hidden');
-      $('what').textContent='Antrean #'+order.queue_number+' · sudah siap';
+      $('what').textContent='Antrean #'+String(order.queue_number).padStart(3,'0')+' · sudah siap';
       if(game)game.halt();
       if(poll){clearInterval(poll);poll=null}
     }
@@ -101,8 +102,8 @@ var SUPABASE_ANON_KEY='ISI_ANON_KEY_DISINI';    // anon / publishable key, BUKAN
   }
 
   function cek(cb){
-    db.rpc('cek_pesanan',{p_public_id:id}).then(function(r){
-      cb(r.data&&r.data[0]?r.data[0]:null);
+    db.rpc('get_customer_order_status',{p_public_id:id}).then(function(r){
+      cb(r.data&&r.data.status?r.data:null,r.error);
     });
   }
 
@@ -111,17 +112,17 @@ var SUPABASE_ANON_KEY='ISI_ANON_KEY_DISINI';    // anon / publishable key, BUKAN
     $('formView').classList.add('hidden');
     $('gameView').classList.remove('hidden');
     $('who').textContent='Halo, '+o.nama;
-    $('what').textContent='Antrean #'+o.queue_number+' · pesananmu sedang dibuat';
+    $('what').textContent='Antrean #'+String(o.queue_number).padStart(3,'0')+' · pesananmu sedang dibuat';
     game=createGame($('c'),sendScore);
     loadBoard();
     setStatus(o.status);
-    if(o.status===STATUS_SIAP)return;
+    if(SIAP.indexOf(o.status)>-1)return;
     poll=setInterval(function(){cek(function(row){if(row)setStatus(row.status)})},5000);
   }
 
   if(!db){showMsg('Supabase belum diisi: lengkapi URL dan anon key di bagian atas script.')}
   else if(!id){showMsg('Tidak ada kode pesanan di link.')}
-  else{cek(function(row){if(row)startOrderView(row);else showMsg('Pesanan tidak ditemukan. Cek lagi link-nya.')})}
+  else{cek(function(row,err){if(row)startOrderView(row);else showMsg(err?'Gagal membaca pesanan: '+err.message:'Pesanan tidak ditemukan. Cek lagi link-nya.')})}
 
   // ===== GAME: CoRei Coffee Flap =====
   function createGame(cv,onOver){
