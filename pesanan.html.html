@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pesanan CoRei</title>
+<style>
+:root{color-scheme:light dark;--sky:#bfe3f2;--card:#f6fbfd;--ink:#17323d;--pipe:#2f9e6e;--pipe2:#1f7a52;--ground:#d9c48a;--muted:#3e6676;--accent:#8a4b1f;--onaccent:#fff;--ok:#1d7a4d;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--sky:#15293a;--card:#1d3548;--ink:#e8f1f5;--pipe:#3fb883;--pipe2:#2a8a61;--ground:#4a4330;--muted:#9bb5c1;--accent:#e0a064;--onaccent:#1b1208;--ok:#6fd9a0}}
+:root[data-theme="dark"]{--sky:#15293a;--card:#1d3548;--ink:#e8f1f5;--pipe:#3fb883;--pipe2:#2a8a61;--ground:#4a4330;--muted:#9bb5c1;--accent:#e0a064;--onaccent:#1b1208;--ok:#6fd9a0}
+*{box-sizing:border-box}
+body{margin:0;background:var(--sky);color:var(--ink);font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif;min-height:100%;display:flex;justify-content:center;padding:16px}
+main{width:100%;max-width:400px}
+h1{font-size:1.3rem;margin:0 0 4px}
+.sub{color:var(--muted);margin:0 0 14px;font-size:.92rem}
+.card{background:var(--card);border:2px solid var(--ink);border-radius:12px;padding:16px;margin-bottom:14px}
+label{display:block;font-size:.85rem;color:var(--muted);margin:10px 0 4px}
+input,select{width:100%;font:inherit;padding:10px;border-radius:8px;border:2px solid var(--ink);background:var(--sky);color:var(--ink)}
+button{font:inherit;font-weight:700;background:var(--accent);color:var(--onaccent);border:0;border-radius:8px;padding:12px 18px;width:100%;margin-top:16px;touch-action:manipulation}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+button:disabled{opacity:.6}
+.hidden{display:none}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.chip{font-size:.85rem;font-weight:700;padding:4px 10px;border-radius:99px;border:2px solid var(--ink)}
+.chip.siap{background:var(--ok);color:var(--sky);border-color:var(--ok)}
+#ready{background:var(--ok);color:var(--sky);border-radius:12px;padding:14px;text-align:center;font-weight:700;margin-bottom:14px}
+canvas{width:100%;max-width:360px;aspect-ratio:360/540;display:block;margin:0 auto;border-radius:10px;border:2px solid var(--ink);touch-action:manipulation;cursor:pointer}
+ol{margin:8px 0 0;padding-left:22px}
+li{padding:2px 0}
+#msg{color:#c0392b;font-size:.9rem;margin-top:10px;min-height:1em}
+</style>
+</head>
+<body>
+<main>
+  <h1>CoRei ☕</h1>
+  <p class="sub">Main dulu sambil menunggu kopimu.</p>
+
+  <section id="formView" class="card">
+    <b>Link pesanan tidak ditemukan.</b>
+    <p class="sub" style="margin:6px 0 0">Buka halaman ini lewat link pesananmu di web CoRei.</p>
+    <div id="msg" role="alert"></div>
+  </section>
+
+  <section id="gameView" class="hidden">
+    <div id="ready" class="hidden"></div>
+    <div class="card row">
+      <div><b id="who"></b><br><span id="what" class="sub" style="margin:0"></span></div>
+      <span id="chip" class="chip">Diproses</span>
+    </div>
+    <canvas id="c" width="360" height="540" aria-label="Game CoRei Coffee Flap"></canvas>
+    <div class="card" style="margin-top:14px">
+      <b>Skor tertinggi</b>
+      <ol id="board"><li>Memuat…</li></ol>
+    </div>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+// ===== ISI DUA BARIS INI =====
+var SUPABASE_URL='https://jxobibhyboralwephbij.supabase.co';      // contoh: https://abcdefgh.supabase.co
+var SUPABASE_ANON_KEY='sb_publishable_W5RbkqXs3oNyvF6ZCPczQg_zFUIL2rI';    // anon / publishable key, BUKAN service_role
+// =============================
+
+(function(){
+  var $=function(id){return document.getElementById(id)};
+  var db=null;
+  try{if(SUPABASE_URL.indexOf('http')===0)db=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY)}catch(e){}
+  var STATUS_SIAP='selesai';   // status yang berarti kopi sudah jadi
+  var order=null,game=null,poll=null;
+  var id=new URLSearchParams(location.search).get('id');
+
+  function showMsg(t){$('msg').textContent=t||''}
+
+  function setStatus(s){
+    var siap=s===STATUS_SIAP;
+    $('chip').textContent=siap?'Siap diambil':(s==='baru'?'Diterima':'Diproses');
+    $('chip').className='chip'+(siap?' siap':'');
+    if(siap){
+      var r=$('ready');
+      r.textContent='Kopimu sudah jadi, silakan diambil! ☕';
+      r.classList.remove('hidden');
+      $('what').textContent='Antrean #'+order.queue_number+' · sudah siap';
+      if(game)game.halt();
+      if(poll){clearInterval(poll);poll=null}
+    }
+  }
+
+  function loadBoard(){
+    if(!db)return;
+    db.from('scores').select('nama,skor').order('skor',{ascending:false}).limit(5).then(function(r){
+      var ol=$('board');ol.innerHTML='';
+      if(r.error||!r.data||!r.data.length){var li=document.createElement('li');li.textContent='Belum ada skor';ol.appendChild(li);return}
+      r.data.forEach(function(x){var li=document.createElement('li');li.textContent=x.nama+' — '+x.skor;ol.appendChild(li)});
+    });
+  }
+
+  function sendScore(s){
+    if(!db||!order||s<1)return;
+    db.from('scores').insert({nama:order.nama,skor:s}).then(function(){loadBoard()});
+  }
+
+  function cek(cb){
+    db.rpc('cek_pesanan',{p_public_id:id}).then(function(r){
+      cb(r.data&&r.data[0]?r.data[0]:null,r.error);
+    });
+  }
+
+  function startOrderView(o){
+    order=o;o.nama=(o.customer_name||'Pelanggan').slice(0,30);
+    $('formView').classList.add('hidden');
+    $('gameView').classList.remove('hidden');
+    $('who').textContent='Halo, '+o.nama;
+    $('what').textContent='Antrean #'+o.queue_number+' · pesananmu sedang dibuat';
+    game=createGame($('c'),sendScore);
+    loadBoard();
+    setStatus(o.status);
+    if(o.status===STATUS_SIAP)return;
+    poll=setInterval(function(){cek(function(row){if(row)setStatus(row.status)})},5000);
+  }
+
+  if(!db){showMsg('Supabase belum diisi: lengkapi URL dan anon key di bagian atas script.')}
+  else if(!id){showMsg('Tidak ada kode pesanan di link.')}
+  else{cek(function(row,err){if(row)startOrderView(row);else showMsg(err?'Gagal membaca pesanan: '+err.message:'Pesanan tidak ditemukan. Cek lagi link-nya.')})}
+
+  // ===== GAME: CoRei Coffee Flap =====
+  function createGame(cv,onOver){
+    var ctx=cv.getContext('2d'),W=360,H=540,GH=70,GAP=150,PW=56;
+    var bird,pipes,drops,score,state,frame,halted=false,last=0;
+    function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim()}
+    function reset(){bird={x:90,y:H/2-GH/2,vy:0,r:13};pipes=[];drops=[];score=0;frame=0;state='ready'}
+    reset();
+    function addPipe(x){pipes.push({x:x,top:60+Math.random()*(H-GH-GAP-120),passed:false})}
+    function flap(){
+      if(halted)return;
+      if(state==='over'){if(frame>20)reset();return}
+      if(state==='ready'){state='play';addPipe(W+40);addPipe(W+230)}
+      bird.vy=-7.4;
+    }
+    document.addEventListener('keydown',function(e){
+      if(/INPUT|SELECT|TEXTAREA/.test((document.activeElement||{}).tagName||''))return;
+      if(e.code==='Space'||e.code==='ArrowUp'||e.code==='KeyW'){e.preventDefault();if(!e.repeat)flap()}
+    });
+    cv.addEventListener('pointerdown',function(e){e.preventDefault();flap()});
+    function die(){
+      state='over';frame=0;
+      for(var i=0;i<34;i++)drops.push({x:bird.x+6,y:bird.y-8,vx:Math.random()*6-1,vy:-Math.random()*6-1,r:2+Math.random()*3.5,rest:false});
+      onOver(score);
+    }
+    function update(k){
+      frame+=k;
+      drops.forEach(function(d){if(d.rest)return;d.vy+=0.4*k;d.x+=d.vx*k;d.y+=d.vy*k;if(d.y>=H-GH-1){d.y=H-GH-1;d.rest=true}});
+      if(state==='ready'){bird.y=H/2-GH/2+Math.sin(frame/12)*8;return}
+      if(state==='over'){if(bird.y<H-GH-bird.r){bird.vy+=0.45*k;bird.y+=bird.vy*k}return}
+      bird.vy+=0.42*k;bird.y+=bird.vy*k;
+      var sp=2.6+Math.min(1.6,score*0.06);
+      for(var i=pipes.length-1;i>=0;i--){
+        var p=pipes[i];p.x-=sp*k;
+        if(p.x+PW<0){pipes.splice(i,1);continue}
+        if(!p.passed&&p.x+PW<bird.x-bird.r){p.passed=true;score++}
+        var inX=bird.x+bird.r-2>p.x&&bird.x-bird.r+2<p.x+PW;
+        if(state==='play'&&inX&&(bird.y-bird.r+2<p.top||bird.y+bird.r-2>p.top+GAP))die();
+      }
+      var lp=pipes[pipes.length-1];
+      if(!lp||lp.x<W-190)addPipe(W+10);
+      if(state==='play'&&bird.y+bird.r>=H-GH){bird.y=H-GH-bird.r;die()}
+      if(bird.y-bird.r<0){bird.y=bird.r;bird.vy=0}
+    }
+    function text(s,y,size,col){ctx.fillStyle=col;ctx.font='bold '+size+'px "Trebuchet MS",sans-serif';ctx.textAlign='center';ctx.fillText(s,W/2,y)}
+    function draw(){
+      var sky=css('--sky'),ink=css('--ink'),pc=css('--pipe'),pc2=css('--pipe2'),gc=css('--ground'),mu=css('--muted');
+      ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
+      pipes.forEach(function(p){
+        ctx.fillStyle=pc;ctx.fillRect(p.x,0,PW,p.top);ctx.fillRect(p.x,p.top+GAP,PW,H-GH-p.top-GAP);
+        ctx.fillStyle=pc2;ctx.fillRect(p.x-4,p.top-18,PW+8,18);ctx.fillRect(p.x-4,p.top+GAP,PW+8,18);
+        ctx.fillStyle='#fff';ctx.font='bold 22px "Trebuchet MS",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+        if(p.top-18>=80){ctx.save();ctx.translate(p.x+PW/2,(p.top-18)/2);ctx.rotate(-Math.PI/2);ctx.fillText('CoRei',0,0);ctx.restore()}
+        var lowH=H-GH-p.top-GAP-18;
+        if(lowH>=80){ctx.save();ctx.translate(p.x+PW/2,p.top+GAP+18+lowH/2);ctx.rotate(-Math.PI/2);ctx.fillText('CoRei',0,0);ctx.restore()}
+        ctx.textBaseline='alphabetic';
+      });
+      ctx.fillStyle=gc;ctx.fillRect(0,H-GH,W,GH);
+      ctx.fillStyle=ink;ctx.fillRect(0,H-GH,W,3);
+      var off=(frame*2.6)%24;for(var x=-off;x<W;x+=24)ctx.fillRect(x,H-GH+16,10,3);
+      ctx.save();ctx.translate(bird.x,bird.y);
+      var sp=state==='over';
+      ctx.rotate(sp?1.9:Math.max(-0.4,Math.min(0.9,bird.vy*0.05)));
+      ctx.strokeStyle=ink;ctx.lineWidth=2;
+      ctx.beginPath();ctx.arc(13,0,7,-Math.PI/2,Math.PI/2);ctx.stroke();
+      ctx.fillStyle='#fff';
+      ctx.beginPath();ctx.moveTo(-13,-11);ctx.lineTo(13,-11);ctx.lineTo(9,13);ctx.lineTo(-9,13);ctx.closePath();ctx.fill();ctx.stroke();
+      if(!sp){
+        ctx.fillStyle='#6b3f1f';
+        ctx.beginPath();ctx.moveTo(-12,-7);ctx.lineTo(12,-7);ctx.lineTo(9,12);ctx.lineTo(-9,12);ctx.closePath();ctx.fill();
+        ctx.strokeStyle=mu;
+        for(var s=-1;s<=1;s+=2){ctx.beginPath();ctx.moveTo(s*5,-14);ctx.quadraticCurveTo(s*5+Math.sin(frame/6+s)*4,-20,s*5,-26);ctx.stroke()}
+      }
+      ctx.fillStyle=pc2;ctx.fillRect(-4,2,8,5);
+      ctx.restore();
+      ctx.fillStyle='#6b3f1f';
+      drops.forEach(function(d){ctx.beginPath();if(d.rest)ctx.ellipse(d.x,d.y,d.r*1.8,d.r*0.6,0,0,Math.PI*2);else ctx.arc(d.x,d.y,d.r,0,Math.PI*2);ctx.fill()});
+      if(state!=='ready')text(String(score),70,44,ink);
+      if(state==='ready'){text('Ketuk untuk mulai',150,24,ink);text('Sambil menunggu kopimu',180,16,mu)}
+      if(state==='over'){
+        ctx.fillStyle='rgba(0,0,0,0.35)';ctx.fillRect(30,170,W-60,150);
+        text('TIME TO COFFEE',215,28,'#fff');
+        text('Skor '+score,250,18,'#fff');
+        text('Ketuk untuk main lagi',290,15,'#fff');
+      }
+      if(halted){ctx.fillStyle='rgba(0,0,0,0.45)';ctx.fillRect(0,0,W,H);text('Kopimu sudah jadi ☕',H/2,26,'#fff')}
+    }
+    function loop(t){
+      var k=last?Math.min(2.5,(t-last)/16.667):1;last=t;
+      if(!halted)update(k);
+      draw();requestAnimationFrame(loop);
+    }
+    requestAnimationFrame(loop);
+    return {halt:function(){halted=true}};
+  }
+})();
+</script>
+</body>
+</html>
