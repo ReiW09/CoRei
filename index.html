@@ -1187,6 +1187,10 @@
         <span>🔗 Salin Link Pesanan Ini</span>
       </button>
 
+      <button type="button" class="btn-game-open" id="btn-game-open" onclick="openCoReiGame()" hidden>
+        ☕ Main Game Sambil Menunggu
+      </button>
+
       <button type="button" class="btn-order-again" onclick="resetOrderAndBack()">
         + Pesan Menu Lainnya (Pesan Lagi)
       </button>
@@ -1896,6 +1900,7 @@
     }
 
     function updateStatusTracker(status) {
+      if (typeof updateGameButton === "function") updateGameButton(status);
       const steps = ["baru", "diproses", "siap", "selesai"];
       const currentIdx = steps.indexOf(status);
 
@@ -2166,6 +2171,40 @@
     loadSavedCustomerProfile();
     renderProducts("Semua");
     restoreCustomerOrderFromUrl();
+  </script>
+  <style>
+    .btn-game-open[hidden]{display:none!important}
+    .btn-game-open{width:100%;margin:0 0 12px;padding:14px 18px;border:0;border-radius:12px;background:var(--accent);color:var(--accent-ink);font:inherit;font-weight:700;cursor:pointer}
+    .game-overlay{position:fixed;inset:0;z-index:9999;background:var(--bg);display:none;flex-direction:column;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+    .game-overlay.open{display:flex}
+    .game-overlay-bar{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line);background:var(--surface);color:var(--ink);font-weight:700}
+    .game-overlay-bar button{border:0;border-radius:8px;background:var(--accent);color:var(--accent-ink);font:inherit;font-weight:700;padding:8px 14px;cursor:pointer}
+    .game-overlay iframe{flex:1;width:100%;border:0;background:var(--bg)}
+  </style>
+  <div class="game-overlay" id="game-overlay" role="dialog" aria-modal="true" aria-label="Game CoRei">
+    <div class="game-overlay-bar"><span>CoRei Coffee Flap</span><button type="button" onclick="closeCoReiGame()">Tutup</button></div>
+    <iframe id="game-frame" title="Game CoRei" src="about:blank"></iframe>
+  </div>
+  <script>
+    const COREI_GAME_URL = "pesanan.html";
+    function openCoReiGame() {
+      if (!lastCompletedOrder || !lastCompletedOrder.publicId) return;
+      const gameFrame = document.getElementById("game-frame");
+      gameFrame.src = COREI_GAME_URL + "?id=" + encodeURIComponent(lastCompletedOrder.publicId);
+      document.getElementById("game-overlay").classList.add("open");
+    }
+    function updateGameButton(status) {
+      const btn = document.getElementById("btn-game-open");
+      if (!btn) return;
+      btn.hidden = !(status === "diproses" || status === "siap");
+      if (btn.hidden) closeCoReiGame();
+    }
+    function closeCoReiGame() {
+      const overlay = document.getElementById("game-overlay");
+      if (!overlay) return;
+      overlay.classList.remove("open");
+      document.getElementById("game-frame").src = "about:blank";
+    }
   </script>
 </body>
 </html>
