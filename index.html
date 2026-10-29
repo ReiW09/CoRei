@@ -1869,6 +1869,8 @@
 
     function updateStatusTracker(status) {
       if (typeof updateGameButton === "function") updateGameButton(status);
+      const copyOrderButton = document.getElementById("btn-copy-order-url");
+      if (copyOrderButton) copyOrderButton.hidden = status === "diproses";
       const steps = ["baru", "diproses", "siap", "selesai"];
       const currentIdx = steps.indexOf(status);
 
