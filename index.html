@@ -1074,17 +1074,9 @@
           <div class="error-msg-text" id="name-error">Nama wajib diisi dulu ya.</div>
         </div>
 
-        <div class="form-group">
-          <label class="form-label" for="customer-phone">
-            Nomor HP <span style="color:var(--danger)">*</span>
-          </label>
-          <input type="tel" id="customer-phone" class="text-input" placeholder="Contoh: 081234567890" maxlength="18" autocomplete="tel" inputmode="tel" oninput="onPhoneInput(this)">
-          <div class="error-msg-text" id="phone-error">Masukkan nomor HP yang valid (8–15 angka).</div>
-          <small style="display:block; margin-top:6px; color:var(--ink-muted);">Nomor HP hanya disimpan di perangkat ini untuk pesanan berikutnya; tidak dikirim ke CoRei. Nama tetap dikirim bersama pesanan.</small>
-        </div>
         <label style="display:flex; align-items:flex-start; gap:8px; margin-top:-6px; font-size:12px; color:var(--ink-muted);">
           <input type="checkbox" id="save-customer-profile" checked style="margin-top:2px;" onchange="toggleCustomerProfileStorage(this)">
-          Simpan nama dan nomor HP di perangkat ini
+          Simpan nama di perangkat ini
         </label>
         <small id="profile-storage-message" role="status" style="display:block; margin-top:4px; color:var(--ink-muted);"></small>
 
@@ -1639,29 +1631,15 @@
       }
     }
 
-    function onPhoneInput(input) {
-      if (isValidCustomerPhone(input.value)) {
-        input.classList.remove("invalid");
-        document.getElementById("phone-error").classList.remove("show");
-      }
-    }
-
-    function isValidCustomerPhone(value) {
-      const phone = value.trim();
-      const digits = phone.replace(/\D/g, "");
-      return /^\+?[\d\s().-]+$/.test(phone) && digits.length >= 8 && digits.length <= 15;
-    }
-
     function loadSavedCustomerProfile() {
       try {
         const rawProfile = localStorage.getItem("corei-customer-profile");
         if (!rawProfile) return;
         const profile = JSON.parse(rawProfile);
-        if (typeof profile.name !== "string" || typeof profile.phone !== "string") {
+        if (typeof profile.name !== "string") {
           throw new Error("Format data pelanggan tersimpan tidak valid.");
         }
         document.getElementById("customer-name").value = profile.name;
-        document.getElementById("customer-phone").value = profile.phone;
       } catch (error) {
         console.error("Could not load saved customer profile:", error);
         document.getElementById("profile-storage-message").textContent = "Data pelanggan tersimpan tidak dapat dibaca di perangkat ini.";
@@ -1679,10 +1657,10 @@
       }
     }
 
-    function saveCustomerProfile(name, phone) {
+    function saveCustomerProfile(name) {
       const saveProfile = document.getElementById("save-customer-profile").checked;
       if (saveProfile) {
-        localStorage.setItem("corei-customer-profile", JSON.stringify({ name, phone }));
+        localStorage.setItem("corei-customer-profile", JSON.stringify({ name }));
       } else {
         localStorage.removeItem("corei-customer-profile");
       }
@@ -1724,21 +1702,11 @@
 
       const nameInput = document.getElementById("customer-name");
       const name = nameInput.value.trim();
-      const phoneInput = document.getElementById("customer-phone");
-      const phone = phoneInput.value.trim();
-
       // Validation 1: Customer Name
       if (!name) {
         nameInput.classList.add("invalid");
         document.getElementById("name-error").classList.add("show");
         nameInput.focus();
-        return;
-      }
-
-      if (!isValidCustomerPhone(phone)) {
-        phoneInput.classList.add("invalid");
-        document.getElementById("phone-error").classList.add("show");
-        phoneInput.focus();
         return;
       }
 
@@ -1784,7 +1752,7 @@
         }
 
         try {
-          saveCustomerProfile(name, phone);
+          saveCustomerProfile(name);
         } catch (storageError) {
           console.error("Could not save customer profile on this device:", storageError);
           document.getElementById("profile-storage-message").textContent = "Pesanan terkirim, tetapi data tidak dapat disimpan di perangkat ini.";
@@ -2008,7 +1976,6 @@
       cart = {};
       selectedPaymentMethod = "";
       document.getElementById("customer-name").value = "";
-      document.getElementById("customer-phone").value = "";
       loadSavedCustomerProfile();
       document.getElementById("btn-pay-qris").classList.remove("selected");
       document.getElementById("btn-pay-cash").classList.remove("selected");
