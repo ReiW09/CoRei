@@ -12,6 +12,7 @@ const commonAssets = [
   "icon-512.png",
   "apple-touch-icon.png"
 ];
+const cashierAssets = ["menu-admin.html"];
 const customerAssets = ["manifest.json", "qris.jpg", "legacy/qris-legacy.jpg"];
 
 await rm(webRoot, { recursive: true, force: true });
@@ -33,7 +34,7 @@ if (isCashierApp) {
 }
 await writeFile(join(webRoot, "index.html"), appPage);
 
-for (const asset of [...commonAssets, ...(!isCashierApp ? customerAssets : [])]) {
+for (const asset of [...commonAssets, ...(isCashierApp ? cashierAssets : customerAssets)]) {
   await cp(join(projectRoot, asset), join(webRoot, asset));
 }
 
