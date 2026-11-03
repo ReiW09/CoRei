@@ -49,6 +49,65 @@
       color-scheme: light;
     }
 
+
+    /* Dark mode toggle button */
+    .theme-toggle-btn {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-full);
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all .15s;
+    }
+    .theme-toggle-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* ── Estimasi waktu tunggu ── */
+    .wait-estimate {
+      display: inline-block;
+      padding: 6px 14px;
+      border-radius: var(--radius-full);
+      background: var(--promo-bg);
+      color: var(--promo-ink);
+      font-size: 13px;
+      font-weight: 600;
+      margin: 4px 0 10px;
+    }
+
+    /* ── Order again button ── */
+    .btn-order-again {
+      width: 100%;
+      padding: 14px 20px;
+      border: 2px dashed var(--line);
+      border-radius: var(--radius-md);
+      background: var(--surface);
+      color: var(--ink-muted);
+      font: 600 15px/1 'Plus Jakarta Sans', sans-serif;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: all .2s;
+    }
+    .btn-order-again:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-subtle);
+    }
+
+    /* ── Cart item count badge animation ── */
+    @keyframes badge-pop {
+      0%   { transform: scale(1); }
+      50%  { transform: scale(1.4); }
+      100% { transform: scale(1); }
+    }
+    .badge-pop { animation: badge-pop 0.3s ease; }
     @media (prefers-color-scheme: dark) {
       :root:not([data-theme="light"]) {
         --bg: #0D1614;
@@ -1560,6 +1619,7 @@
 
       if (count > 0) {
         cartBar.classList.add("visible");
+        patchCartBadge();
       } else {
         cartBar.classList.remove("visible");
         closeCartDrawer();
@@ -1865,6 +1925,7 @@
       window.history.replaceState({}, "", url);
 
       document.getElementById("thanks-screen").classList.add("open");
+      updateWaitEstimate(order.queueNumber);
     }
 
     function updateStatusTracker(status) {
@@ -2123,6 +2184,83 @@
       });
     }
 
+
+    // ==========================================
+    // DARK MODE (index.html)
+    // ==========================================
+    (function() {
+      const saved = localStorage.getItem("corei_theme");
+      if (saved) document.documentElement.setAttribute("data-theme", saved);
+    })();
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const themeBtn = document.getElementById("index-theme-btn");
+      if (!themeBtn) return;
+      const isDark = () => document.documentElement.getAttribute("data-theme") === "dark";
+      const update = () => {
+        themeBtn.textContent = isDark() ? "☀️" : "🌙";
+        themeBtn.title = isDark() ? "Mode terang" : "Mode gelap";
+      };
+      update();
+      themeBtn.addEventListener("click", () => {
+        const newTheme = isDark() ? "light" : "dark";
+        document.documentElement.setAttribute("data-theme", newTheme);
+        localStorage.setItem("corei_theme", newTheme);
+        update();
+      });
+    });
+
+    // ==========================================
+    // ESTIMASI WAKTU TUNGGU
+    // ==========================================
+    function updateWaitEstimate(queueNumber) {
+      // Estimasi kasar: tiap antrean ~3 menit, max 30 menit
+      const parsed = parseInt((queueNumber || "0").replace(/\D/g, ""), 10);
+      if (!parsed || isNaN(parsed)) return;
+      // Di sini kita tidak tahu posisi antrian, jadi pakai pesan umum
+      const wrap = document.getElementById("wait-estimate-wrap");
+      const text = document.getElementById("wait-estimate-text");
+      if (wrap && text) {
+        text.textContent = "5–15 menit";
+        wrap.style.display = "block";
+      }
+    }
+
+    // ==========================================
+    // PESAN LAGI / ORDER AGAIN
+    // ==========================================
+    function orderAgain() {
+      // Tutup thanks screen
+      document.getElementById("thanks-screen").classList.remove("open");
+      // Bersihkan cart
+      cart = {};
+      updateCartUI();
+      // Scroll ke atas
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      // Reset URL query (hapus ?pesanan=...)
+      const url = new URL(window.location.href);
+      url.searchParams.delete("pesanan");
+      window.history.replaceState({}, "", url);
+      // Unsubscribe status channel
+      if (customerStatusChannel && supabaseClient) {
+        supabaseClient.removeChannel(customerStatusChannel);
+        customerStatusChannel = null;
+      }
+      lastCompletedOrder = null;
+    }
+
+    // ==========================================
+    // ANIMASI BADGE CART
+    // ==========================================
+    const _origUpdateCartUI = typeof updateCartUI !== "undefined" ? updateCartUI : null;
+    function patchCartBadge() {
+      const countLabel = document.getElementById("cart-item-count");
+      if (countLabel) {
+        countLabel.classList.remove("badge-pop");
+        void countLabel.offsetWidth; // trigger reflow
+        countLabel.classList.add("badge-pop");
+      }
+    }
     // Check URL query parameters (e.g. ?meja=7 or ?qr)
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.has("meja")) {
