@@ -232,3 +232,4 @@ html = html.replace(
 
 writeFileSync(file, html, "utf8");
 console.log("✅ index.html upgraded successfully");
+

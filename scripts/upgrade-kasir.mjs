@@ -500,3 +500,4 @@ html = html.replace(
 
 writeFileSync(file, html, "utf8");
 console.log("✅ kasir.html upgraded successfully");
+
