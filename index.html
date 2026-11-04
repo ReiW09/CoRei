@@ -1069,6 +1069,7 @@
         </div>
       </div>
       <div id="table-indicator" class="table-chip" style="display:none;">Meja <span id="meja-val">1</span></div>
+      <button type="button" id="membership-button" onclick="openMembershipModal()" style="margin-left:auto;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);padding:8px 12px;font-weight:700;cursor:pointer">⭐ Membership</button>
     </header>
 
     <!-- Category Tabs Navigation -->
@@ -1108,6 +1109,35 @@
       <div class="cart-pill-total" id="cart-total-price">Rp0</div>
     </button>
   </aside>
+
+  <!-- ==================== MEMBERSHIP ==================== -->
+  <div class="modal-overlay" id="membership-modal" onclick="closeMembershipModal(event)" style="z-index:120">
+    <div class="qr-modal" onclick="event.stopPropagation()" style="max-width:420px">
+      <div class="drawer-header">
+        <h3>Membership CoRei</h3>
+        <button type="button" class="drawer-close" onclick="closeMembershipModal()" aria-label="Tutup">✕</button>
+      </div>
+      <div class="drawer-body">
+        <div id="membership-status" style="display:none;background:var(--accent-soft);border-radius:12px;padding:14px;margin-bottom:14px">
+          <strong id="membership-name"></strong><br><span>Saldo poin: <b id="membership-points">0</b></span>
+          <button type="button" onclick="logoutMembership()" style="float:right;border:0;background:none;color:var(--danger);font-weight:700;cursor:pointer">Keluar</button>
+        </div>
+        <div id="membership-auth">
+          <div style="display:flex;gap:8px;margin-bottom:14px">
+            <button type="button" id="membership-login-tab" onclick="setMembershipMode('login')" style="flex:1;border:1px solid var(--accent);border-radius:10px;padding:10px;background:var(--accent);color:white;font-weight:700">Masuk</button>
+            <button type="button" id="membership-register-tab" onclick="setMembershipMode('register')" style="flex:1;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--surface);color:var(--ink);font-weight:700">Daftar</button>
+          </div>
+          <label class="form-label" for="membership-name-input">Nama Member</label>
+          <input id="membership-name-input" class="text-input" maxlength="40" autocomplete="username" placeholder="Nama yang digunakan saat pesanan">
+          <label class="form-label" for="membership-pin-input" style="margin-top:12px">PIN 4–6 angka</label>
+          <input id="membership-pin-input" class="text-input" type="password" inputmode="numeric" maxlength="6" pattern="[0-9]{4,6}" placeholder="••••">
+          <div id="membership-error" class="error-msg-text" style="display:none;margin-top:10px"></div>
+          <button type="button" id="membership-submit" onclick="submitMembership()" class="btn-primary" style="width:100%;margin-top:14px">Masuk Membership</button>
+        </div>
+        <p style="font-size:12px;color:var(--ink-muted);margin-top:14px">Setiap Rp1.000 pesanan menghasilkan 10 poin. Poin diberikan setelah pesanan berhasil dibuat.</p>
+      </div>
+    </div>
+  </div>
 
   <!-- ==================== CART & CHECKOUT DRAWER ==================== -->
   <div class="modal-overlay" id="cart-modal" onclick="closeCartDrawer(event)">
@@ -1387,6 +1417,68 @@
     const supabaseClient = window.supabase && window.COREI_SUPABASE_URL && window.COREI_SUPABASE_ANON_KEY
       ? window.supabase.createClient(window.COREI_SUPABASE_URL, window.COREI_SUPABASE_ANON_KEY)
       : null;
+
+    let membershipMode = "login";
+    let activeMembership = JSON.parse(localStorage.getItem("corei_membership") || "null");
+    if (activeMembership) activeMembership.pin = sessionStorage.getItem("corei_membership_pin") || null;
+
+    function openMembershipModal() {
+      updateMembershipUi();
+      document.getElementById("membership-modal").classList.add("open");
+    }
+    function closeMembershipModal(event) {
+      if (!event || event.target.id === "membership-modal") document.getElementById("membership-modal").classList.remove("open");
+    }
+    function setMembershipMode(mode) {
+      membershipMode = mode;
+      const login = document.getElementById("membership-login-tab");
+      const register = document.getElementById("membership-register-tab");
+      login.style.background = mode === "login" ? "var(--accent)" : "var(--surface)";
+      login.style.color = mode === "login" ? "white" : "var(--ink)";
+      register.style.background = mode === "register" ? "var(--accent)" : "var(--surface)";
+      register.style.color = mode === "register" ? "white" : "var(--ink)";
+      document.getElementById("membership-submit").textContent = mode === "login" ? "Masuk Membership" : "Daftar Membership";
+    }
+    function updateMembershipUi() {
+      const loggedIn = !!activeMembership;
+      document.getElementById("membership-status").style.display = loggedIn ? "block" : "none";
+      document.getElementById("membership-auth").style.display = loggedIn ? "none" : "block";
+      if (loggedIn) {
+        document.getElementById("membership-name").textContent = activeMembership.name;
+        document.getElementById("membership-points").textContent = Number(activeMembership.points || 0).toLocaleString("id-ID") + " poin";
+        document.getElementById("membership-button").textContent = `⭐ ${activeMembership.name} · ${activeMembership.points || 0} poin`;
+      } else document.getElementById("membership-button").textContent = "⭐ Membership";
+    }
+    async function submitMembership() {
+      const name = document.getElementById("membership-name-input").value.trim();
+      const pin = document.getElementById("membership-pin-input").value.trim();
+      const errorBox = document.getElementById("membership-error");
+      errorBox.style.display = "none";
+      if (!/^[0-9]{4,6}$/.test(pin)) {
+        errorBox.textContent = "PIN harus 4 sampai 6 angka.";
+        errorBox.style.display = "block";
+        return;
+      }
+      const functionName = membershipMode === "register" ? "register_customer_member" : "login_customer_member";
+      const { data, error } = await supabaseClient.rpc(functionName, { p_name: name, p_pin: pin });
+      if (error || (membershipMode === "login" && !data)) {
+        errorBox.textContent = error?.message || "Nama atau PIN tidak cocok.";
+        errorBox.style.display = "block";
+        return;
+      }
+      activeMembership = { name: data.name, points: data.points };
+      activeMembership.pin = pin;
+      localStorage.setItem("corei_membership", JSON.stringify({ name: activeMembership.name, points: activeMembership.points }));
+      sessionStorage.setItem("corei_membership_pin", pin);
+      document.getElementById("customer-name").value = activeMembership.name;
+      updateMembershipUi();
+    }
+    function logoutMembership() {
+      activeMembership = null;
+      localStorage.removeItem("corei_membership");
+      sessionStorage.removeItem("corei_membership_pin");
+      updateMembershipUi();
+    }
 
     async function loadDynamicMenu() {
       if (!supabaseClient) return;
@@ -1863,6 +1955,19 @@
           throw new Error("Respons pesanan tidak lengkap. Silakan periksa status pesanan sebelum mencoba lagi.");
         }
 
+        if (activeMembership && activeMembership.pin && activeMembership.name.toLowerCase() === name.toLowerCase()) {
+          const { data: pointData } = await supabaseClient.rpc("claim_customer_order_points", {
+            p_name: activeMembership.name,
+            p_pin: activeMembership.pin,
+            p_public_id: data.public_id
+          });
+          if (pointData?.success) {
+            activeMembership.points = pointData.points;
+            localStorage.setItem("corei_membership", JSON.stringify({ name: activeMembership.name, points: activeMembership.points }));
+            updateMembershipUi();
+          }
+        }
+
         try {
           saveCustomerProfile(name);
         } catch (storageError) {
@@ -2328,6 +2433,7 @@
 
     // Initial render
     loadSavedCustomerProfile();
+    updateMembershipUi();
     loadDynamicMenu().finally(() => renderProducts("Semua"));
     restoreCustomerOrderFromUrl();
   </script>
