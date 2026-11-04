@@ -1072,7 +1072,7 @@
     </header>
 
     <!-- Category Tabs Navigation -->
-    <nav class="category-sticky" aria-label="Kategori Menu">
+    <nav id="category-nav" class="category-sticky" aria-label="Kategori Menu">
       <div class="category-nav" id="category-nav">
         <button type="button" class="cat-pill active" onclick="filterCategory('Semua', this)">Semua Menu</button>
         <button type="button" class="cat-pill" onclick="filterCategory('Kopi', this)">Kopi</button>
@@ -1294,7 +1294,7 @@
     const ICE_OPTIONS = ["Less ice", "Normal ice", "More ice"];
     const TEMP_OPTIONS = ["Ice", "Hot"];
 
-    const PRODUCTS = [
+    const STATIC_PRODUCTS = [
       {
         id: "americano",
         category: "Kopi",
@@ -1380,12 +1380,64 @@
         ]
       }
     ];
+    let PRODUCTS = STATIC_PRODUCTS;
 
     const WA_NUMBER = "6285283252381";
     const SHEET_URL = "https://script.google.com/macros/s/AKfycbws5ZZwgGpxe8BQkdHI7B7nR0zl5x81ELBGnJRSLZb0dxSrm_bf1Kom3qEteg47fb2r1Q/exec";
     const supabaseClient = window.supabase && window.COREI_SUPABASE_URL && window.COREI_SUPABASE_ANON_KEY
       ? window.supabase.createClient(window.COREI_SUPABASE_URL, window.COREI_SUPABASE_ANON_KEY)
       : null;
+
+    async function loadDynamicMenu() {
+      if (!supabaseClient) return;
+      try {
+        const { data, error } = await supabaseClient
+          .from("menu_variants")
+          .select("id,product_name,category,variant_label,price,compare_price,has_temperature,has_ice,has_sweetness,is_active,tag")
+          .eq("is_active", true)
+          .order("product_name")
+          .order("variant_label");
+        if (error || !Array.isArray(data) || data.length === 0) return;
+
+        const grouped = new Map();
+        for (const row of data) {
+          if (!grouped.has(row.product_name)) grouped.set(row.product_name, {
+            id: row.id.replace(/-[^-]+$/, "") || row.product_name.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+            category: row.category || "Lainnya",
+            name: row.product_name,
+            description: row.variant_label ? `${row.product_name} tersedia dalam beberapa pilihan varian` : row.product_name,
+            tag: row.tag === "promo" ? "Promo" : row.tag === "favorit" ? "Favorit" : row.tag === "baru" ? "Baru" : "",
+            image: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=300&auto=format&fit=crop&q=80",
+            variants: []
+          });
+          grouped.get(row.product_name).variants.push({
+            id: row.id,
+            label: row.variant_label,
+            price: Number(row.price) || 0,
+            comparePrice: Number(row.compare_price) || 0,
+            hasTemp: !!row.has_temperature,
+            hasIce: !!row.has_ice,
+            hasSweet: !!row.has_sweetness
+          });
+        }
+        PRODUCTS = Array.from(grouped.values());
+        const categoryNav = document.getElementById("category-nav");
+        if (categoryNav) {
+          const existing = new Set(Array.from(categoryNav.querySelectorAll("button")).map(button => button.textContent.trim()));
+          for (const category of new Set(PRODUCTS.map(product => product.category).filter(Boolean))) {
+            if (existing.has(category)) continue;
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "cat-pill";
+            button.textContent = category;
+            button.setAttribute("onclick", `filterCategory('${category.replace(/'/g, "\\'")}', this)`);
+            categoryNav.appendChild(button);
+          }
+        }
+      } catch (_) {
+        PRODUCTS = STATIC_PRODUCTS;
+      }
+    }
 
     // ==========================================
     // STATE MANAGEMENT
@@ -2276,7 +2328,7 @@
 
     // Initial render
     loadSavedCustomerProfile();
-    renderProducts("Semua");
+    loadDynamicMenu().finally(() => renderProducts("Semua"));
     restoreCustomerOrderFromUrl();
   </script>
   <style>

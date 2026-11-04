@@ -40,7 +40,12 @@
     .admin-heading h2{margin:0}
     .heading-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
     .btn-logout{padding:8px 16px;border-radius:10px;background:var(--surface-subtle);color:var(--ink);border:1px solid var(--line);font-weight:600;font-size:13px}
-    .btn-refresh{padding:8px 16px;border-radius:10px;background:var(--accent-subtle);color:var(--accent);border:1px solid var(--accent);font-weight:600;font-size:13px}
+    .btn-refresh,.btn-add{padding:8px 16px;border-radius:10px;background:var(--accent-subtle);color:var(--accent);border:1px solid var(--accent);font-weight:600;font-size:13px}
+    .register-panel{display:grid;grid-template-columns:repeat(6,minmax(120px,1fr));gap:10px;margin-bottom:16px;padding:16px;background:var(--surface);border:1px solid var(--line);border-radius:16px}
+    .register-panel .field-name{grid-column:auto}
+    .register-panel .wide{grid-column:span 2}
+    .register-panel-actions{grid-column:1/-1;display:flex;align-items:center;justify-content:flex-end;gap:10px}
+    @media(max-width:700px){.register-panel{grid-template-columns:1fr 1fr}.register-panel .wide{grid-column:span 2}}
 
     /* Search Bar */
     .search-wrap{margin-bottom:16px}
@@ -129,10 +134,21 @@
           <p class="muted" id="menu-count" style="margin:2px 0 0;font-size:13px;">Memuat...</p>
         </div>
         <div class="heading-actions">
+          <button class="btn-add" id="show-register-btn" type="button">＋ Daftar Menu Baru</button>
           <button class="btn-refresh" id="refresh-btn" type="button">🔄 Refresh</button>
           <button class="btn-logout" id="logout-btn" type="button">Keluar</button>
         </div>
       </div>
+
+      <form id="register-menu-panel" class="register-panel hidden">
+        <div class="field-group wide"><div class="field-label">Nama Produk</div><input id="new-product-name" class="field-input" required maxlength="80" placeholder="Contoh: Matcha Latte"></div>
+        <div class="field-group"><div class="field-label">Kategori</div><select id="new-category" class="field-select"><option>Kopi</option><option>Non Kopi</option><option>Makanan</option><option>Snack</option><option>Lainnya</option></select></div>
+        <div class="field-group"><div class="field-label">Label Varian</div><input id="new-variant-label" class="field-input" required maxlength="80" placeholder="Cup"></div>
+        <div class="field-group"><div class="field-label">Harga</div><input id="new-price" class="field-input" type="number" min="0" step="500" required></div>
+        <div class="field-group"><div class="field-label">Harga Coret</div><input id="new-compare-price" class="field-input" type="number" min="0" step="500" value="0"></div>
+        <div class="field-group"><div class="field-label">Tag</div><select id="new-tag" class="field-select"><option value="">Tidak ada</option><option value="promo">Promo</option><option value="favorit">Favorit</option><option value="baru">Baru</option></select></div>
+        <div class="register-panel-actions"><span id="register-message" class="save-msg"></span><button id="cancel-register-btn" class="btn-logout" type="button">Batal</button><button id="register-submit-btn" class="primary" style="width:auto;margin:0" type="submit">Daftarkan Menu</button></div>
+      </form>
 
       <div class="search-wrap">
         <input id="search-input" class="search-input" type="search" placeholder="Cari nama produk atau varian...">
@@ -166,6 +182,11 @@
     const searchInput  = document.getElementById("search-input");
     const refreshBtn   = document.getElementById("refresh-btn");
     const logoutBtn    = document.getElementById("logout-btn");
+    const showRegisterBtn = document.getElementById("show-register-btn");
+    const registerPanel = document.getElementById("register-menu-panel");
+    const cancelRegisterBtn = document.getElementById("cancel-register-btn");
+    const registerSubmitBtn = document.getElementById("register-submit-btn");
+    const registerMessage = document.getElementById("register-message");
 
     let allMenuItems = [];
 
@@ -219,6 +240,44 @@
     }
 
     refreshBtn.addEventListener("click", loadMenu);
+
+    showRegisterBtn.addEventListener("click", () => {
+      registerPanel.classList.toggle("hidden");
+      if (!registerPanel.classList.contains("hidden")) document.getElementById("new-product-name").focus();
+    });
+    cancelRegisterBtn.addEventListener("click", () => registerPanel.classList.add("hidden"));
+    registerPanel.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      registerSubmitBtn.disabled = true;
+      registerSubmitBtn.textContent = "Mendaftarkan...";
+      registerMessage.className = "save-msg";
+      registerMessage.textContent = "";
+      const productName = document.getElementById("new-product-name").value.trim();
+      const variantLabel = document.getElementById("new-variant-label").value.trim();
+      const price = parseInt(document.getElementById("new-price").value, 10);
+      const comparePrice = parseInt(document.getElementById("new-compare-price").value, 10) || 0;
+      const { error } = await client.rpc("register_menu_variant", {
+        p_product_name: productName,
+        p_category: document.getElementById("new-category").value,
+        p_variant_label: variantLabel,
+        p_price: price,
+        p_compare_price: comparePrice,
+        p_tag: document.getElementById("new-tag").value || ""
+      });
+      registerSubmitBtn.disabled = false;
+      registerSubmitBtn.textContent = "Daftarkan Menu";
+      if (error) {
+        registerMessage.className = "save-msg err";
+        registerMessage.textContent = "❌ " + error.message;
+        return;
+      }
+      registerMessage.className = "save-msg ok";
+      registerMessage.textContent = "✓ Menu baru terdaftar";
+      registerPanel.reset();
+      document.getElementById("new-compare-price").value = "0";
+      await loadMenu();
+      setTimeout(() => { registerPanel.classList.add("hidden"); registerMessage.textContent = ""; }, 1200);
+    });
 
     // ── Search ─────────────────────────────────────────────────
     searchInput.addEventListener("input", () => {
