@@ -53,7 +53,7 @@ END; $$;
 
 CREATE OR REPLACE FUNCTION public.claim_customer_order_points(p_name TEXT, p_pin TEXT, p_public_id TEXT)
 RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, extensions, pg_temp AS $$
-DECLARE v_cafe UUID; v_member public.customer_memberships%ROWTYPE; v_order public.orders%ROWTYPE; v_points INTEGER;
+DECLARE v_cafe UUID; v_member public.customer_memberships%ROWTYPE; v_order public.orders%ROWTYPE; v_points INTEGER; v_new_points INTEGER;
 BEGIN
   SELECT id INTO STRICT v_cafe FROM public.cafes WHERE slug='corei';
   SELECT * INTO v_member FROM public.customer_memberships WHERE cafe_id=v_cafe AND lower(name)=lower(btrim(COALESCE(p_name,'')));
@@ -62,14 +62,24 @@ BEGIN
   END IF;
   SELECT * INTO v_order FROM public.orders WHERE public_id=p_public_id AND cafe_id=v_cafe;
   IF NOT FOUND THEN RETURN jsonb_build_object('success', false, 'message', 'Pesanan tidak ditemukan.'); END IF;
+  IF lower(trim(v_order.customer_name)) <> lower(trim(v_member.name)) THEN
+    RETURN jsonb_build_object('success', false, 'message', 'Pesanan ini tidak terdaftar atas nama member yang sama.');
+  END IF;
+  IF v_order.status <> 'selesai' THEN
+    RETURN jsonb_build_object('success', false, 'message', 'Poin baru bisa ditambahkan setelah pesanan selesai.');
+  END IF;
   IF EXISTS (SELECT 1 FROM public.membership_point_transactions WHERE member_id=v_member.id AND order_id=v_order.id) THEN
-    RETURN jsonb_build_object('success', true, 'points', v_member.points, 'earned', 0);
+    SELECT points INTO v_new_points FROM public.customer_memberships WHERE id=v_member.id;
+    RETURN jsonb_build_object('success', true, 'points', v_new_points, 'earned', 0, 'message', 'Poin untuk pesanan ini sudah ditambahkan.');
   END IF;
   v_points := floor(v_order.total / 1000)::INTEGER * 10;
-  UPDATE public.customer_memberships SET points=points+v_points WHERE id=v_member.id;
+  UPDATE public.customer_memberships
+  SET points = points + v_points
+  WHERE id = v_member.id
+  RETURNING points INTO v_new_points;
   INSERT INTO public.membership_point_transactions(member_id, order_id, points, description)
   VALUES (v_member.id, v_order.id, v_points, 'Poin pesanan ' || p_public_id);
-  RETURN jsonb_build_object('success', true, 'points', v_member.points+v_points, 'earned', v_points);
+  RETURN jsonb_build_object('success', true, 'points', v_new_points, 'earned', v_points, 'message', 'Poin berhasil ditambahkan.');
 END; $$;
 
 GRANT EXECUTE ON FUNCTION public.register_customer_member(TEXT,TEXT) TO anon, authenticated;

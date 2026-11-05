@@ -1420,6 +1420,7 @@
 
     let membershipMode = "login";
     let activeMembership = JSON.parse(localStorage.getItem("corei_membership") || "null");
+    let membershipPointClaimedOrderIds = new Set();
     if (activeMembership) activeMembership.pin = sessionStorage.getItem("corei_membership_pin") || null;
 
     function openMembershipModal() {
@@ -1476,9 +1477,37 @@
     }
     function logoutMembership() {
       activeMembership = null;
+      membershipPointClaimedOrderIds.clear();
       localStorage.removeItem("corei_membership");
       sessionStorage.removeItem("corei_membership_pin");
       updateMembershipUi();
+    }
+
+    async function claimMembershipPointsForOrder(publicId) {
+      if (!publicId || !activeMembership || !activeMembership.pin || !supabaseClient) return;
+      if (membershipPointClaimedOrderIds.has(publicId)) return;
+      if (lastCompletedOrder && lastCompletedOrder.customerName && activeMembership.name.toLowerCase() !== lastCompletedOrder.customerName.toLowerCase()) {
+        return;
+      }
+
+      const { data: pointData, error } = await supabaseClient.rpc("claim_customer_order_points", {
+        p_name: activeMembership.name,
+        p_pin: activeMembership.pin,
+        p_public_id: publicId
+      });
+
+      if (error) {
+        console.warn("Could not claim membership points for completed order:", error);
+        return;
+      }
+
+      if (pointData && pointData.success && typeof pointData.points === "number") {
+        activeMembership.points = pointData.points;
+        membershipPointClaimedOrderIds.add(publicId);
+        logMembershipToGoogleSheets(activeMembership.name, activeMembership.pin, activeMembership.points);
+        localStorage.setItem("corei_membership", JSON.stringify({ name: activeMembership.name, points: activeMembership.points }));
+        updateMembershipUi();
+      }
     }
 
     async function loadDynamicMenu() {
@@ -1956,20 +1985,6 @@
           throw new Error("Respons pesanan tidak lengkap. Silakan periksa status pesanan sebelum mencoba lagi.");
         }
 
-        if (activeMembership && activeMembership.pin && activeMembership.name.toLowerCase() === name.toLowerCase()) {
-          const { data: pointData } = await supabaseClient.rpc("claim_customer_order_points", {
-            p_name: activeMembership.name,
-            p_pin: activeMembership.pin,
-            p_public_id: data.public_id
-          });
-          if (pointData?.success) {
-            activeMembership.points = pointData.points;
-            logMembershipToGoogleSheets(activeMembership.name, activeMembership.pin, activeMembership.points);
-            localStorage.setItem("corei_membership", JSON.stringify({ name: activeMembership.name, points: activeMembership.points }));
-            updateMembershipUi();
-          }
-        }
-
         try {
           saveCustomerProfile(name);
         } catch (storageError) {
@@ -2157,10 +2172,15 @@
     function applyCustomerOrderStatus(status) {
       const previousStatus = lastCompletedOrder?.orderStatus;
       if (!lastCompletedOrder) return;
+      const isCompleted = status.status === "selesai";
       lastCompletedOrder.orderStatus = status.status;
       lastCompletedOrder.paymentStatus = status.payment_status;
       updateStatusTracker(status.status);
       updateCustomerStatusNotice(status.status, previousStatus !== status.status);
+
+      if (isCompleted && activeMembership && activeMembership.pin && activeMembership.name) {
+        claimMembershipPointsForOrder(lastCompletedOrder.publicId);
+      }
     }
 
     function subscribeToCustomerOrder(publicId) {
