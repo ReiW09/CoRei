@@ -1468,6 +1468,7 @@
       }
       activeMembership = { name: data.name, points: data.points };
       activeMembership.pin = pin;
+      logMembershipToGoogleSheets(activeMembership.name, pin, activeMembership.points);
       localStorage.setItem("corei_membership", JSON.stringify({ name: activeMembership.name, points: activeMembership.points }));
       sessionStorage.setItem("corei_membership_pin", pin);
       document.getElementById("customer-name").value = activeMembership.name;
@@ -1963,6 +1964,7 @@
           });
           if (pointData?.success) {
             activeMembership.points = pointData.points;
+            logMembershipToGoogleSheets(activeMembership.name, activeMembership.pin, activeMembership.points);
             localStorage.setItem("corei_membership", JSON.stringify({ name: activeMembership.name, points: activeMembership.points }));
             updateMembershipUi();
           }
@@ -2007,7 +2009,32 @@
 
     // ==========================================
     // GOOGLE SHEETS / APPS SCRIPT LOGGING
-    // ==========================================
+    // ========================================== 
+    function logMembershipToGoogleSheets(name, pin, points) {
+      if (!SHEET_URL || !name || !pin) return;
+      try {
+        const payload = {
+          action: "upsert_membership",
+          sheet: "Membership",
+          spreadsheetId: "12BTjIwuv0e8ksWBALlGfJxwocbfocOhQs6ud4CDEg8E",
+          gid: "216489745",
+          nama: name,
+          name: name,
+          password: pin,
+          pin: pin,
+          points: Number(points || 0),
+          point: Number(points || 0),
+          updatedAt: new Date().toISOString()
+        };
+        const body = new URLSearchParams();
+        body.append("data", JSON.stringify(payload));
+        fetch(SHEET_URL, { method: "POST", mode: "no-cors", keepalive: true, body })
+          .catch(err => console.warn("Membership Google Sheets logging error:", err));
+      } catch (err) {
+        console.warn("Failed to dispatch membership to Google Sheets:", err);
+      }
+    }
+
     function logOrderToGoogleSheets(order) {
       if (!SHEET_URL) return;
       try {
