@@ -1520,7 +1520,7 @@
       localStorage.setItem("corei_membership", JSON.stringify({ name: activeMembership.name, points: activeMembership.points }));
       logMembershipToGoogleSheets(activeMembership.name, activeMembership.pin, activeMembership.points);
       updateMembershipUi();
-      message.innerHTML = `<strong>Penukaran berhasil!</strong><br>${data.reward}<br>Kode tukar: <b>${data.code}</b><br>Tunjukkan kode ini kepada kasir.`;
+      message.innerHTML = `<strong>Penukaran berhasil!</strong><br>${data.reward}<br>Kode tukar: <b>${data.code}</b><br>Pesanan: <b>#${data.queue_number || '-'}</b> · kategori <b>MEMBERSHIP REWARD</b><br>Pesanan sudah masuk ke kasir dengan harga Rp0.`;
       message.style.display = "block";
     }
 

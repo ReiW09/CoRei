@@ -323,7 +323,7 @@
           <span>${dateStr}</span>
         </div>
         <div style="font-size:12px; margin-top:4px;">
-          Nama Cust: <strong>${order.customer_name}</strong> ${order.table_label ? '(Meja: ' + order.table_label + ')' : ''}
+          Nama Cust: <strong>${order.customer_name}</strong> ${order.table_label === "MEMBERSHIP REWARD" ? '<span style="color:#7c3aed;font-weight:800">MEMBERSHIP REWARD</span>' : (order.table_label ? '(Meja: ' + order.table_label + ')' : '')}
         </div>
         <div class="r-line"></div>
         ${itemsHtml}
