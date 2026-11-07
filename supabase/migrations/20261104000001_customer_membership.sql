@@ -72,7 +72,7 @@ BEGIN
     SELECT points INTO v_new_points FROM public.customer_memberships WHERE id=v_member.id;
     RETURN jsonb_build_object('success', true, 'points', v_new_points, 'earned', 0, 'message', 'Poin untuk pesanan ini sudah ditambahkan.');
   END IF;
-  v_points := floor(v_order.total / 1000)::INTEGER * 10;
+  v_points := floor(v_order.total / 10.0)::INTEGER;
   UPDATE public.customer_memberships
   SET points = points + v_points
   WHERE id = v_member.id

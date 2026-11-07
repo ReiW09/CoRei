@@ -29,7 +29,7 @@ BEGIN
     RETURN;
   END IF;
 
-  v_points := floor(v_order.total / 1000)::INTEGER * 10;
+  v_points := floor(v_order.total / 10.0)::INTEGER;
   UPDATE public.customer_memberships
   SET points = points + v_points
   WHERE id = v_member.id;
