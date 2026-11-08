@@ -135,6 +135,7 @@
         </div>
         <div class="heading-actions">
           <button class="btn-add" id="show-register-btn" type="button">＋ Daftar Menu Baru</button>
+          <button class="btn-add" id="show-bundle-btn" type="button">🎁 Menu Bundle</button>
           <button class="btn-refresh" id="refresh-btn" type="button">🔄 Refresh</button>
           <button class="btn-logout" id="logout-btn" type="button">Keluar</button>
         </div>
@@ -149,6 +150,28 @@
         <div class="field-group"><div class="field-label">Tag</div><select id="new-tag" class="field-select"><option value="">Tidak ada</option><option value="promo">Promo</option><option value="favorit">Favorit</option><option value="baru">Baru</option></select></div>
         <div class="register-panel-actions"><span id="register-message" class="save-msg"></span><button id="cancel-register-btn" class="btn-logout" type="button">Batal</button><button id="register-submit-btn" class="primary" style="width:auto;margin:0" type="submit">Daftarkan Menu</button></div>
       </form>
+
+      <section id="bundle-panel" class="register-panel hidden" style="grid-template-columns:repeat(2,minmax(180px,1fr));">
+        <div class="field-group field-name">
+          <div class="field-label">Nama Menu Bundle</div>
+          <input id="bundle-name" class="field-input" maxlength="80" required placeholder="Contoh: Americano + Latte">
+        </div>
+        <div class="field-group">
+          <div class="field-label">Harga Normal</div>
+          <input id="bundle-normal-price" class="field-input" type="number" readonly value="0">
+        </div>
+        <div class="field-group">
+          <div class="field-label">Harga Promo / Diskon</div>
+          <input id="bundle-price" class="field-input" type="number" min="0" step="500" required placeholder="Harga jual bundle">
+        </div>
+        <div id="bundle-components" class="field-group wide" style="grid-column:1/-1"></div>
+        <div class="register-panel-actions">
+          <span id="bundle-message" class="save-msg"></span>
+          <button id="bundle-cancel-btn" class="btn-logout" type="button">Batal</button>
+          <button id="bundle-add-component-btn" class="btn-refresh" type="button">＋ Tambah Menu</button>
+          <button id="bundle-submit-btn" class="primary" style="width:auto;margin:0" type="button">Jadikan Menu Bundle</button>
+        </div>
+      </section>
 
       <div class="search-wrap">
         <input id="search-input" class="search-input" type="search" placeholder="Cari nama produk atau varian...">
@@ -187,6 +210,13 @@
     const cancelRegisterBtn = document.getElementById("cancel-register-btn");
     const registerSubmitBtn = document.getElementById("register-submit-btn");
     const registerMessage = document.getElementById("register-message");
+    const showBundleBtn = document.getElementById("show-bundle-btn");
+    const bundlePanel = document.getElementById("bundle-panel");
+    const bundleName = document.getElementById("bundle-name");
+    const bundleNormalPrice = document.getElementById("bundle-normal-price");
+    const bundlePrice = document.getElementById("bundle-price");
+    const bundleComponents = document.getElementById("bundle-components");
+    const bundleMessage = document.getElementById("bundle-message");
 
     let allMenuItems = [];
 
@@ -241,7 +271,121 @@
 
     refreshBtn.addEventListener("click", loadMenu);
 
+    function updateBundleNormalPrice() {
+      const menuById = new Map(allMenuItems.map(item => [item.id, item]));
+      let normal = 0;
+      bundleComponents.querySelectorAll(".bundle-component-row").forEach(row => {
+        const select = row.querySelector("select");
+        const quantity = Math.max(1, parseInt(row.querySelector("input[type=number]").value, 10) || 1);
+        const menu = menuById.get(select.value);
+        normal += (Number(menu?.price) || 0) * quantity;
+      });
+      bundleNormalPrice.value = normal;
+      const promo = parseInt(bundlePrice.value, 10) || 0;
+      if (normal > 0 && promo > 0 && promo < normal) {
+        bundleMessage.className = "save-msg ok";
+        bundleMessage.textContent = `Diskon Rp${(normal - promo).toLocaleString("id-ID")} (${Math.round((normal - promo) / normal * 100)}%)`;
+      } else if (promo >= normal && normal > 0) {
+        bundleMessage.className = "save-msg err";
+        bundleMessage.textContent = "Harga bundle harus lebih rendah dari harga normal.";
+      } else {
+        bundleMessage.textContent = "";
+      }
+    }
+
+    function addBundleComponentRow(defaultId = "") {
+      const row = document.createElement("div");
+      row.className = "bundle-component-row";
+      row.style.cssText = "display:grid;grid-template-columns:minmax(180px,1fr) 90px 36px;gap:8px;margin-bottom:8px;";
+      const select = document.createElement("select");
+      select.className = "field-select";
+      const defaultOption = document.createElement("option");
+      defaultOption.value = "";
+      defaultOption.textContent = "Pilih menu...";
+      select.append(defaultOption);
+      allMenuItems.filter(item => item.is_active && item.category !== "Promo Bundle").forEach(item => {
+        const option = document.createElement("option");
+        option.value = item.id;
+        option.textContent = `${item.product_name}${item.variant_label ? " - " + item.variant_label : ""} (Rp${Number(item.price || 0).toLocaleString("id-ID")})`;
+        option.selected = item.id === defaultId;
+        select.append(option);
+      });
+      const quantity = document.createElement("input");
+      quantity.className = "field-input";
+      quantity.type = "number";
+      quantity.min = "1";
+      quantity.value = "1";
+      quantity.setAttribute("aria-label", "Jumlah menu");
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "btn-logout";
+      remove.style.padding = "7px";
+      remove.textContent = "✕";
+      remove.addEventListener("click", () => { row.remove(); updateBundleNormalPrice(); });
+      select.addEventListener("change", updateBundleNormalPrice);
+      quantity.addEventListener("input", updateBundleNormalPrice);
+      row.append(select, quantity, remove);
+      bundleComponents.append(row);
+      updateBundleNormalPrice();
+    }
+
+    function openBundlePanel() {
+      registerPanel.classList.add("hidden");
+      bundlePanel.classList.toggle("hidden");
+      if (!bundlePanel.classList.contains("hidden") && bundleComponents.children.length === 0) {
+        addBundleComponentRow();
+        addBundleComponentRow();
+      }
+    }
+
+    showBundleBtn.addEventListener("click", openBundlePanel);
+    document.getElementById("bundle-cancel-btn").addEventListener("click", () => bundlePanel.classList.add("hidden"));
+    document.getElementById("bundle-add-component-btn").addEventListener("click", () => addBundleComponentRow());
+    bundlePrice.addEventListener("input", updateBundleNormalPrice);
+
+    document.getElementById("bundle-submit-btn").addEventListener("click", async () => {
+      const componentIds = [];
+      const quantities = [];
+      bundleComponents.querySelectorAll(".bundle-component-row").forEach(row => {
+        const id = row.querySelector("select").value;
+        if (!id) return;
+        componentIds.push(id);
+        quantities.push(Math.max(1, parseInt(row.querySelector("input[type=number]").value, 10) || 1));
+      });
+      const name = bundleName.value.trim();
+      const price = parseInt(bundlePrice.value, 10);
+      const normal = parseInt(bundleNormalPrice.value, 10);
+      if (!name || componentIds.length === 0 || !(price >= 0) || price >= normal) {
+        bundleMessage.className = "save-msg err";
+        bundleMessage.textContent = "Isi nama, minimal satu menu, dan harga bundle yang lebih rendah dari harga normal.";
+        return;
+      }
+      const submit = document.getElementById("bundle-submit-btn");
+      submit.disabled = true;
+      const { error } = await client.rpc("create_menu_bundle", {
+        p_product_name: name,
+        p_component_ids: componentIds,
+        p_quantities: quantities,
+        p_bundle_price: price
+      });
+      submit.disabled = false;
+      if (error) {
+        bundleMessage.className = "save-msg err";
+        bundleMessage.textContent = "❌ " + error.message;
+        return;
+      }
+      bundleMessage.className = "save-msg ok";
+      bundleMessage.textContent = "✓ Menu bundle berhasil dibuat";
+      bundleName.value = "";
+      bundlePrice.value = "";
+      bundleComponents.innerHTML = "";
+      addBundleComponentRow();
+      addBundleComponentRow();
+      await loadMenu();
+    });
+
     showRegisterBtn.addEventListener("click", () => {
+      bundlePanel.classList.add("hidden");
       registerPanel.classList.toggle("hidden");
       if (!registerPanel.classList.contains("hidden")) document.getElementById("new-product-name").focus();
     });
