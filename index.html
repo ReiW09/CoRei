@@ -1558,7 +1558,7 @@
       try {
         const { data, error } = await supabaseClient
           .from("menu_variants")
-          .select("id,product_name,category,variant_label,price,compare_price,has_temperature,has_ice,has_sweetness,is_active,tag")
+          .select("id,product_name,category,variant_label,price,compare_price,has_temperature,has_ice,has_sweetness,is_active,tag,image_url")
           .eq("is_active", true)
           .order("product_name")
           .order("variant_label");
@@ -1572,7 +1572,7 @@
             name: row.product_name,
             description: row.variant_label ? `${row.product_name} tersedia dalam beberapa pilihan varian` : row.product_name,
             tag: row.tag === "promo" ? "Promo" : row.tag === "favorit" ? "Favorit" : row.tag === "baru" ? "Baru" : "",
-            image: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=300&auto=format&fit=crop&q=80",
+            image: row.image_url || "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=300&auto=format&fit=crop&q=80",
             variants: []
           });
           grouped.get(row.product_name).variants.push({

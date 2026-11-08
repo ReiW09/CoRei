@@ -544,12 +544,60 @@
       tagSel.addEventListener("change", () => markDirty(card, saveMsg));
       fTag.append(tagLbl, tagSel);
 
+      // Foto menu
+      const fImage = document.createElement("div");
+      fImage.className = "field-group field-name";
+      const imageLbl = document.createElement("div");
+      imageLbl.className = "field-label";
+      imageLbl.textContent = "Foto Menu";
+      const imagePreview = document.createElement("img");
+      imagePreview.alt = item.product_name;
+      imagePreview.style.cssText = "width:90px;height:90px;object-fit:cover;border-radius:12px;border:1px solid var(--line);display:none;";
+      if (item.image_url) { imagePreview.src = item.image_url; imagePreview.style.display = "block"; }
+      const imageInput = document.createElement("input");
+      imageInput.type = "file";
+      imageInput.accept = "image/jpeg,image/png,image/webp";
+      imageInput.className = "field-input";
+      let pendingImageRemove = false;
+      const removeImageBtn = document.createElement("button");
+      removeImageBtn.type = "button";
+      removeImageBtn.className = "btn-secondary";
+      removeImageBtn.textContent = "Hapus Foto";
+      removeImageBtn.style.cssText = "margin-top:6px;padding:7px 10px;font-size:12px;";
+      removeImageBtn.addEventListener("click", () => {
+        pendingImageRemove = true;
+        imageInput.value = "";
+        imagePreview.removeAttribute("src");
+        imagePreview.style.display = "none";
+        markDirty(card, saveMsg);
+      });
+      imageInput.addEventListener("change", () => {
+        const file = imageInput.files?.[0];
+        if (!file) return;
+        const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+        if (!allowedTypes.includes(file.type)) {
+          imageInput.value = "";
+          showMsg(saveMsg, "Foto harus berformat JPG, PNG, atau WebP.", "err");
+          return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+          imageInput.value = "";
+          showMsg(saveMsg, "Ukuran foto maksimal 5 MB.", "err");
+          return;
+        }
+        pendingImageRemove = false;
+        imagePreview.src = URL.createObjectURL(file);
+        imagePreview.style.display = "block";
+        markDirty(card, saveMsg);
+      });
+      fImage.append(imageLbl, imagePreview, imageInput, removeImageBtn);
+
       // Register change listeners for inputs
       [fName, fVariant, fPrice, fCompare].forEach(fg => {
         fg.querySelector("input").addEventListener("input", () => markDirty(card, saveMsg));
       });
 
-      fields.append(fName, fCategory, fVariant, fPrice, fCompare, fTag);
+      fields.append(fName, fCategory, fVariant, fPrice, fCompare, fTag, fImage);
 
       // ── Footer ─────────────────────────────────────────────
       const footer = document.createElement("div");
@@ -589,18 +637,41 @@
         });
 
         let categoryError = null;
+        let imageError = null;
         if (!error) {
           const categoryResult = await client.rpc("update_menu_variant_category", {
             p_variant_id: item.id,
             p_category: newCategory
           });
           categoryError = categoryResult.error;
+
+          if (!categoryError && imageInput.files?.[0]) {
+            const file = imageInput.files[0];
+            if (file.size > 5 * 1024 * 1024) {
+              imageError = new Error("Ukuran foto maksimal 5 MB.");
+            } else {
+              const extension = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
+              const path = `${item.id}-${Date.now()}.${extension}`;
+              const upload = await client.storage.from("menu-images").upload(path, file, { upsert: true, contentType: file.type });
+              if (upload.error) imageError = upload.error;
+              else {
+                const { data: publicUrl } = client.storage.from("menu-images").getPublicUrl(path);
+                const imageResult = await client.rpc("update_menu_variant_image", { p_variant_id: item.id, p_image_url: publicUrl.publicUrl });
+                imageError = imageResult.error;
+                if (!imageError) item.image_url = publicUrl.publicUrl;
+              }
+            }
+          } else if (!categoryError && pendingImageRemove) {
+            const imageResult = await client.rpc("update_menu_variant_image", { p_variant_id: item.id, p_image_url: "" });
+            imageError = imageResult.error;
+            if (!imageError) item.image_url = "";
+          }
         }
 
         saveBtn.disabled = false;
         saveBtn.textContent = "Simpan";
 
-        const finalError = error || categoryError;
+        const finalError = error || categoryError || imageError;
         if (finalError) {
           showMsg(saveMsg, "❌ " + finalError.message, "err");
           card.classList.add("dirty");
