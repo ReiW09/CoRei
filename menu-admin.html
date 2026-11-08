@@ -142,7 +142,7 @@
 
       <form id="register-menu-panel" class="register-panel hidden">
         <div class="field-group wide"><div class="field-label">Nama Produk</div><input id="new-product-name" class="field-input" required maxlength="80" placeholder="Contoh: Matcha Latte"></div>
-        <div class="field-group"><div class="field-label">Kategori</div><select id="new-category" class="field-select"><option>Kopi</option><option>Non Kopi</option><option>Makanan</option><option>Snack</option><option>Lainnya</option></select></div>
+        <div class="field-group"><div class="field-label">Kategori</div><select id="new-category" class="field-select"><option>Kopi</option><option>Non Kopi</option><option>Signature</option><option>Promo Bundle</option><option>Makanan</option><option>Snack</option><option>Lainnya</option></select></div>
         <div class="field-group"><div class="field-label">Label Varian</div><input id="new-variant-label" class="field-input" required maxlength="80" placeholder="Cup"></div>
         <div class="field-group"><div class="field-label">Harga</div><input id="new-price" class="field-input" type="number" min="0" step="500" required></div>
         <div class="field-group"><div class="field-label">Harga Coret</div><input id="new-compare-price" class="field-input" type="number" min="0" step="500" value="0"></div>
@@ -352,6 +352,24 @@
       // Nama Produk (full width)
       const fName = makeField("Nama Produk", "text", item.product_name, "field-name", card, null);
 
+      // Kategori
+      const fCategory = document.createElement("div");
+      fCategory.className = "field-group";
+      const categoryLbl = document.createElement("div");
+      categoryLbl.className = "field-label";
+      categoryLbl.textContent = "Kategori";
+      const categorySel = document.createElement("select");
+      categorySel.className = "field-select";
+      ["Kopi", "Non Kopi", "Signature", "Promo Bundle", "Makanan", "Snack", "Lainnya"].forEach(category => {
+        const opt = document.createElement("option");
+        opt.value = category;
+        opt.textContent = category;
+        if ((item.category || "Lainnya") === category) opt.selected = true;
+        categorySel.append(opt);
+      });
+      categorySel.addEventListener("change", () => markDirty(card, saveMsg));
+      fCategory.append(categoryLbl, categorySel);
+
       // Varian
       const fVariant = makeField("Label Varian", "text", item.variant_label || "", "", card, null);
 
@@ -387,7 +405,7 @@
         fg.querySelector("input").addEventListener("input", () => markDirty(card, saveMsg));
       });
 
-      fields.append(fName, fVariant, fPrice, fCompare, fTag);
+      fields.append(fName, fCategory, fVariant, fPrice, fCompare, fTag);
 
       // ── Footer ─────────────────────────────────────────────
       const footer = document.createElement("div");
@@ -411,6 +429,7 @@
         const newCompare = parseInt(fCompare.querySelector("input").value) || 0;
         const newActive  = toggleInput.checked;
         const newTag     = tagSel.value || null;
+        const newCategory = categorySel.value;
 
         if (!newName) { showMsg(saveMsg, "Nama produk wajib diisi.", "err"); saveBtn.disabled = false; saveBtn.textContent = "Simpan"; return; }
         if (newPrice < 0) { showMsg(saveMsg, "Harga tidak valid.", "err"); saveBtn.disabled = false; saveBtn.textContent = "Simpan"; return; }
@@ -425,11 +444,21 @@
           p_tag:           newTag || ""
         });
 
+        let categoryError = null;
+        if (!error) {
+          const categoryResult = await client.rpc("update_menu_variant_category", {
+            p_variant_id: item.id,
+            p_category: newCategory
+          });
+          categoryError = categoryResult.error;
+        }
+
         saveBtn.disabled = false;
         saveBtn.textContent = "Simpan";
 
-        if (error) {
-          showMsg(saveMsg, "❌ " + error.message, "err");
+        const finalError = error || categoryError;
+        if (finalError) {
+          showMsg(saveMsg, "❌ " + finalError.message, "err");
           card.classList.add("dirty");
           card.classList.remove("saved");
         } else {
@@ -440,6 +469,7 @@
           item.compare_price = newCompare;
           item.is_active     = newActive;
           item.tag           = newTag;
+          item.category      = newCategory;
           // Update display
           prodName.textContent = newName;
           varLabel.textContent = newVariant || "—";
