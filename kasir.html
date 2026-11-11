@@ -131,6 +131,12 @@
             <button type="button" onclick="closeReportModal()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);">&times;</button>
           </div>
           <p class="small" style="margin:4px 0 10px;">Ringkasan transaksi dari daftar pesanan kasir</p>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
+            <button class="filter-chip active" data-rperiod="today" onclick="setReportPeriod('today',this)" type="button">Hari ini</button>
+            <button class="filter-chip" data-rperiod="7d" onclick="setReportPeriod('7d',this)" type="button">7 hari</button>
+            <button class="filter-chip" data-rperiod="30d" onclick="setReportPeriod('30d',this)" type="button">30 hari</button>
+            <button class="filter-chip" data-rperiod="all" onclick="setReportPeriod('all',this)" type="button">Semua</button>
+          </div>
 
           <!-- Stat ring atas -->
           <div class="report-stats-grid">
@@ -629,108 +635,7 @@
       ordersGrid.replaceChildren();
     });
 
-    
-    
-    // ==========================================
-    // LAPORAN OMZET & EKSPOR CSV
-    // ==========================================
-    function openReportModal() {
-      calculateAndRenderReport();
-      document.getElementById("report-modal").classList.add("open");
-    }
 
-    function closeReportModal() {
-      document.getElementById("report-modal").classList.remove("open");
-    }
-
-    document.getElementById("report-open-btn")?.addEventListener("click", openReportModal);
-
-    function calculateAndRenderReport() {
-      let totalOmzet = 0;
-      let paidOrdersCount = 0;
-      let countQris = 0;
-      let countCash = 0;
-      const itemMap = {};
-
-      allOrders.forEach(o => {
-        if (o.payment_status === "lunas" && o.status !== "batal") {
-          totalOmzet += Number(o.total || 0);
-          paidOrdersCount++;
-          if (o.payment_method === "QRIS") countQris++;
-          if (o.payment_method === "Cash") countCash++;
-
-          (o.items || []).forEach(item => {
-            const key = item.productName + " (" + item.variantLabel + ")";
-            if (!itemMap[key]) {
-              itemMap[key] = { qty: 0, revenue: 0 };
-            }
-            itemMap[key].qty += Number(item.qty || 0);
-            itemMap[key].revenue += Number((item.price || 0) * (item.qty || 0));
-          });
-        }
-      });
-
-      document.getElementById("stat-total-omzet").textContent = formatRupiah(totalOmzet);
-      document.getElementById("stat-total-orders").textContent = paidOrdersCount + " pesanan";
-      document.getElementById("stat-payment-split").textContent = "QRIS: " + countQris + " | Cash: " + countCash;
-
-      const tbody = document.getElementById("top-items-tbody");
-      tbody.replaceChildren();
-
-      const sortedItems = Object.entries(itemMap).sort((a, b) => b[1].qty - a[1].qty);
-      if (sortedItems.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--muted);padding:14px;">Belum ada pesanan lunas.</td></tr>';
-      } else {
-        sortedItems.forEach(([name, data]) => {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td style="font-weight:600;">${name}</td>
-            <td style="text-align:right;">${data.qty}x</td>
-            <td style="text-align:right;">${formatRupiah(data.revenue)}</td>
-          `;
-          tbody.appendChild(tr);
-        });
-      }
-    }
-
-    function exportOrdersToCSV() {
-      if (!allOrders.length) {
-        alert("Belum ada data pesanan untuk diekspor.");
-        return;
-      }
-
-      // Header CSV
-      let csvContent = "data:text/csv;charset=utf-8,";
-      csvContent += "No Antrean,Waktu,Nama Pelanggan,Meja,Cara Bayar,Status Bayar,Status Pesanan,Rincian Menu,Total (Rp)\r\n";
-
-      allOrders.forEach(o => {
-        const queue = "#" + String(o.queue_number).padStart(3, "0");
-        const time = new Date(o.created_at).toLocaleString("id-ID", { dateStyle: "short", timeStyle: "short" }).replace(",", "");
-        const name = '"' + (o.customer_name || "").replace(/"/g, '""') + '"';
-        const table = '"' + (o.table_label || "").replace(/"/g, '""') + '"';
-        const method = o.payment_method || "-";
-        const payStatus = o.payment_status === "lunas" ? "Lunas" : "Belum Lunas";
-        const status = o.status || "-";
-        
-        const itemsSummary = (o.items || []).map(i => {
-          const opts = [i.temp, i.ice, i.sweet].filter(Boolean).join("/");
-          return i.qty + "x " + i.productName + "(" + i.variantLabel + (opts ? "-" + opts : "") + ")";
-        }).join(" | ");
-        const itemsClean = '"' + itemsSummary.replace(/"/g, '""') + '"';
-        const total = o.total || 0;
-
-        csvContent += [queue, time, name, table, method, payStatus, status, itemsClean, total].join(",") + "\r\n";
-      });
-
-      const encodedUri = encodeURI(csvContent);
-      const link = document.createElement("a");
-      const filename = "Laporan_Penjualan_CoRei_" + new Date().toISOString().slice(0, 10) + ".csv";
-      link.setAttribute("href", encodedUri);
-      link.setAttribute("download", filename);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
 
     // ==========================================
     // DARK MODE TOGGLE
@@ -874,6 +779,35 @@
     });
 
     // ==========================================
+    // LAPORAN: FILTER TANGGAL
+    // ==========================================
+    let reportPeriod = "today";
+
+    function setReportPeriod(period, btn) {
+      reportPeriod = period;
+      document.querySelectorAll("[data-rperiod]").forEach(b => b.classList.remove("active"));
+      if (btn) btn.classList.add("active");
+      calculateAndRenderReport();
+    }
+
+    function getFilteredOrdersForReport() {
+      const now = new Date();
+      if (reportPeriod === "all") return allOrders;
+
+      let cutoff;
+      if (reportPeriod === "today") {
+        cutoff = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      } else if (reportPeriod === "7d") {
+        cutoff = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      } else if (reportPeriod === "30d") {
+        cutoff = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      } else {
+        return allOrders;
+      }
+      return allOrders.filter(o => new Date(o.created_at) >= cutoff);
+    }
+
+    // ==========================================
     // LAPORAN OMZET — EXTENDED
     // ==========================================
     function openReportModal() {
@@ -894,8 +828,9 @@
       let countCash = 0;
       const itemMap = {};
       const hourMap = {};
+      const reportOrders = getFilteredOrdersForReport();
 
-      allOrders.forEach(o => {
+      reportOrders.forEach(o => {
         // Hourly distribution (semua pesanan)
         const h = new Date(o.created_at).getHours();
         hourMap[h] = (hourMap[h] || 0) + 1;
@@ -976,10 +911,11 @@
     }
 
     function exportOrdersToCSV() {
-      if (!allOrders.length) { alert("Belum ada data pesanan untuk diekspor."); return; }
+      const reportOrders = getFilteredOrdersForReport();
+      if (!reportOrders.length) { alert("Tidak ada data pesanan pada periode ini untuk diekspor."); return; }
       let csvContent = "data:text/csv;charset=utf-8,";
       csvContent += "No Antrean,Waktu,Nama Pelanggan,Meja,Cara Bayar,Status Bayar,Status Pesanan,Rincian Menu,Total (Rp)\r\n";
-      allOrders.forEach(o => {
+      reportOrders.forEach(o => {
         const queue = "#" + String(o.queue_number).padStart(3, "0");
         const time = new Date(o.created_at).toLocaleString("id-ID", { dateStyle: "short", timeStyle: "short" }).replace(",", "");
         const name = '"' + (o.customer_name || "").replace(/"/g, '""') + '"';

@@ -8,6 +8,7 @@ const webRoot = join(projectRoot, isCashierApp ? "www-kasir" : "www");
 const commonAssets = [
   "supabase-config.js",
   "pesanan.html",
+  "sw.js",
   "icon-192.png",
   "icon-512.png",
   "apple-touch-icon.png"

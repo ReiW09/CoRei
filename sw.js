@@ -1,4 +1,4 @@
-const CACHE = "corei-v3";
+const CACHE = "corei-v4";
 const OFFLINE_URL = "./";
 
 // ── Install: cache shell aset utama ──────────────────────────────────────────
