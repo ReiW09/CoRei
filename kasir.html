@@ -199,6 +199,7 @@
     let kitchenChannel = null;
     let currentCafeId = null;
     let allOrders = [];
+    let allReportOrders = [];
     let currentFilter = "aktif";
     let searchQuery = "";
     let soundEnabled = true;
@@ -782,37 +783,25 @@
     // LAPORAN: FILTER TANGGAL
     // ==========================================
     let reportPeriod = "today";
+    let reportRequestId = 0;
 
-    function setReportPeriod(period, btn) {
+    async function setReportPeriod(period, btn) {
       reportPeriod = period;
       document.querySelectorAll("[data-rperiod]").forEach(b => b.classList.remove("active"));
       if (btn) btn.classList.add("active");
-      calculateAndRenderReport();
+      await loadReportOrders();
     }
 
     function getFilteredOrdersForReport() {
-      const now = new Date();
-      if (reportPeriod === "all") return allOrders;
-
-      let cutoff;
-      if (reportPeriod === "today") {
-        cutoff = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      } else if (reportPeriod === "7d") {
-        cutoff = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-      } else if (reportPeriod === "30d") {
-        cutoff = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-      } else {
-        return allOrders;
-      }
-      return allOrders.filter(o => new Date(o.created_at) >= cutoff);
+      return allReportOrders;
     }
 
     // ==========================================
     // LAPORAN OMZET — EXTENDED
     // ==========================================
-    function openReportModal() {
-      calculateAndRenderReport();
+    async function openReportModal() {
       document.getElementById("report-modal").classList.add("open");
+      await loadReportOrders();
     }
 
     function closeReportModal() {
@@ -820,6 +809,60 @@
     }
 
     document.getElementById("report-open-btn")?.addEventListener("click", openReportModal);
+
+    async function loadReportOrders() {
+      if (!currentCafeId) return;
+      const requestId = ++reportRequestId;
+
+      const stats = [
+        document.getElementById("stat-total-omzet"),
+        document.getElementById("stat-total-orders"),
+        document.getElementById("stat-avg-order"),
+        document.getElementById("stat-payment-split")
+      ];
+      stats.forEach(stat => { stat.textContent = "Memuat..."; });
+
+      const columns = "public_id, queue_number, customer_name, table_label, payment_method, payment_status, status, items, total, created_at";
+      const pageSize = 1000;
+      const orders = [];
+      let offset = 0;
+      let cutoff = null;
+      const now = new Date();
+      if (reportPeriod === "today") {
+        cutoff = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      } else if (reportPeriod === "7d") {
+        cutoff = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      } else if (reportPeriod === "30d") {
+        cutoff = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      }
+
+      while (true) {
+        let query = client.from("orders")
+          .select(columns)
+          .eq("cafe_id", currentCafeId)
+          .order("created_at", { ascending: false })
+          .order("public_id", { ascending: false })
+          .range(offset, offset + pageSize - 1);
+        if (cutoff) query = query.gte("created_at", cutoff.toISOString());
+
+        const { data, error } = await query;
+        if (requestId !== reportRequestId) return;
+        if (error) {
+          console.error("Unable to load sales report orders:", error);
+          stats.forEach(stat => { stat.textContent = "Gagal dimuat"; });
+          alert("Gagal memuat laporan omzet: " + error.message);
+          return;
+        }
+
+        const page = data || [];
+        orders.push(...page);
+        if (page.length < pageSize) break;
+        offset += pageSize;
+      }
+
+      allReportOrders = orders;
+      calculateAndRenderReport();
+    }
 
     function calculateAndRenderReport() {
       let totalOmzet = 0;
@@ -913,13 +956,16 @@
     function exportOrdersToCSV() {
       const reportOrders = getFilteredOrdersForReport();
       if (!reportOrders.length) { alert("Tidak ada data pesanan pada periode ini untuk diekspor."); return; }
-      let csvContent = "data:text/csv;charset=utf-8,";
-      csvContent += "No Antrean,Waktu,Nama Pelanggan,Meja,Cara Bayar,Status Bayar,Status Pesanan,Rincian Menu,Total (Rp)\r\n";
+      const escapeCsvField = value => '"' + String(value ?? "").replace(/"/g, '""') + '"';
+      const csvRows = [
+        "sep=;",
+        ["No Antrean", "Waktu", "Nama Pelanggan", "Meja", "Cara Bayar", "Status Bayar", "Status Pesanan", "Rincian Menu", "Total (Rp)"]
+          .map(escapeCsvField)
+          .join(";")
+      ];
       reportOrders.forEach(o => {
         const queue = "#" + String(o.queue_number).padStart(3, "0");
         const time = new Date(o.created_at).toLocaleString("id-ID", { dateStyle: "short", timeStyle: "short" }).replace(",", "");
-        const name = '"' + (o.customer_name || "").replace(/"/g, '""') + '"';
-        const table = '"' + (o.table_label || "").replace(/"/g, '""') + '"';
         const method = o.payment_method || "-";
         const payStatus = o.payment_status === "lunas" ? "Lunas" : "Belum Lunas";
         const status = o.status || "-";
@@ -927,15 +973,34 @@
           const opts = [i.temp, i.ice, i.sweet].filter(Boolean).join("/");
           return i.qty + "x " + i.productName + "(" + i.variantLabel + (opts ? "-" + opts : "") + ")";
         }).join(" | ");
-        const itemsClean = '"' + itemsSummary.replace(/"/g, '""') + '"';
-        csvContent += [queue, time, name, table, method, payStatus, status, itemsClean, o.total || 0].join(",") + "\r\n";
+        csvRows.push([
+          queue,
+          time,
+          o.customer_name || "",
+          o.table_label || "",
+          method,
+          payStatus,
+          status,
+          itemsSummary,
+          Number(o.total) || 0
+        ].map(escapeCsvField).join(";"));
       });
+      const paidOrders = reportOrders.filter(o => o.payment_status === "lunas" && o.status !== "batal");
+      const totalOmzet = paidOrders.reduce((total, o) => total + (Number(o.total) || 0), 0);
+      csvRows.push("");
+      csvRows.push([
+        `TOTAL OMZET LUNAS (${paidOrders.length} pesanan)`,
+        "", "", "", "", "", "", "",
+        totalOmzet
+      ].map(escapeCsvField).join(";"));
       const link = document.createElement("a");
-      link.setAttribute("href", encodeURI(csvContent));
+      const downloadUrl = URL.createObjectURL(new Blob(["\uFEFF" + csvRows.join("\r\n") + "\r\n"], { type: "text/csv;charset=utf-8" }));
+      link.href = downloadUrl;
       link.setAttribute("download", "Laporan_Penjualan_CoRei_" + new Date().toISOString().slice(0, 10) + ".csv");
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      setTimeout(() => URL.revokeObjectURL(downloadUrl), 0);
     }
 
     // ==========================================
